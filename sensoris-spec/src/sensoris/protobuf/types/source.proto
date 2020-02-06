@@ -1,0 +1,204 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.types.source;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.types.source";
+option java_outer_classname = "SensorisSourceTypes";
+option java_multiple_files = true;
+
+// Import Google message types.
+import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+import "sensoris/protobuf/types/spatial.proto";
+
+//
+// Information for specific sensors.
+//
+
+// Navigation satellite system.
+message NavigationSatelliteSystem {
+  // Satellite system.
+  enum SatelliteSystem {
+    // Unknown.
+    UNKNOWN_SATELLITE_SYSTEM = 0;
+    // United States' Global Positioning System (GPS).
+    GPS = 1;
+    // Russian Global'naya Navigatsionnaya Sputnikovaya Sistema (GLONASS).
+    GLONASS = 2;
+    // European Union Galileo positioning system (GALILEO).
+    GALILEO = 3;
+    // Chinese BeiDou Satellite Navigation Experimental System (BeiDou-1).
+    BEIDOU_1 = 4;
+    // Chinese BeiDou Navigation Satellite System (BDS, COMPASS, BeiDou-2).
+    BEIDOU_2 = 5;
+    // Indian NAVigation with Indian Constellation (NAVIC).
+    NAVIC = 6;
+    // Japanese Quasi-Zenith Satellite System (QZSS).
+    QZSS = 7;
+  }
+
+  // Satellite based augmentation system.
+  enum SatelliteBasedAugmentationSystem {
+    // Unknown.
+    UNKNOWN_SATELLITE_BASED = 0;
+    // Any satellite based augmentation system.
+    SATELLITE_BASED = 1;
+    // United States' Wide Area Augmentation System (WAAS).
+    WAAS = 2;
+    // European Geostationary Navigation Overlay Service (EGNOS).
+    EGNOS = 3;
+    // Japanese Multi-functional Satellite Augmentation System (MSAS).
+    MSAS = 4;
+    // Japanese Quasi-Zenith Satellite System (QZSS).
+    QZSS_SATELLITE_BASED = 5;
+    // Indian GPS-aided GEO augmented navigation (GAGAN).
+    GAGAN = 6;
+    // Russian System for Differential Correction and Monitoring (SDCM).
+    SDCM = 7;
+    // Chinese Satellite Navigation Augmentation System (SNAS).
+    SNAS = 8;
+    // United States' Wide Area GPS Enhancement (WAGE).
+    WAGE = 9;
+    // Commercial StarFire.
+    STAR_FIRE = 10;
+    // Commercial Starfix.
+    STAR_FIX = 11;
+    // Commercial OmniSTAR.
+    OMNI_STAR = 12;
+  }
+
+  // Ground based augmentation system.
+  enum GroundBasedAugmentationSystem {
+    // Unknown.
+    UNKNOWN_GROUND_BASED = 0;
+    // Any ground based augmentation system.
+    GROUND_BASED = 1;
+    // International Civil Aviation Organization Ground-Based Augmentation System (GBAS).
+    GBAS = 2;
+    // United States' US Nationwide Differential GPS System (NDGPS).
+    NDGPS = 3;
+    // German Satellitenpositionierungsdienst der deutschen Landesvermessung (SAPOS).
+    SAPOS = 4;
+    // German Accurate Positioning by Low Frequency (ALF).
+    ALF = 5;
+    // Commercial AXIO-NET.
+    AXIO_NET = 6;
+    // Commercial VRS Now.
+    VRS_NOW = 7;
+    // Commercial SmartNet.
+    SMART_NET = 8;
+  }
+
+  // Satellite system.
+  repeated SatelliteSystem satellite_system = 1;
+
+  // Satellite based augmentation system.
+  repeated SatelliteBasedAugmentationSystem satellite_based_augmentation_system = 2;
+
+  // Ground based augmentation system.
+  repeated GroundBasedAugmentationSystem ground_based_augmentation_system = 3;
+
+  // Elevation mask.
+  //
+  // All satellites that have an elevation below the elevation mask are not used for determination of positions.
+  //
+  // @unit Degree
+  // @resolution 1
+  // @range [0, 90)
+  google.protobuf.Int64Value elevation_mask = 4 [(sensoris.protobuf.types.base.exponent) = 0];
+
+  // 3 D vector describing the offset from the SENSORIS vehicle coordinate system reference point to the GNSS antenna reference point.
+  //
+  // If the antenna offset is set, then all GNSS positions measured by the sensor shall be transformed to the SENSORIS vehicle coordinate system by applying the antenna offset and the corresponding vehicle rotation.
+  //
+  // @example Value of (x = 0, y = 0, z = 1 m) corresponds to a GNSS antenna reference point being exactly 1 meter above the SENSORIS vehicle coordinate system reference point.
+  sensoris.protobuf.types.spatial.XyzVectorAndAccuracy antenna_offset_and_accuracy = 5;
+
+  // Proprietary extension.
+  repeated google.protobuf.Any extension = 15;
+}
+
+//
+// Sensor.
+//
+
+// Sensor.
+message Sensor {
+  // Mounting position and orientation relative to SENSORIS vehicle coordinate system.
+  message MountingPositionAndOrientation {
+    // Metric translation.
+    sensoris.protobuf.types.spatial.PositionAndAccuracy translation_and_accuracy = 1;
+
+    // Orientation.
+    sensoris.protobuf.types.spatial.RotationAndAccuracy orientation_and_accuracy = 2;
+  }
+
+  // Mounting position and orientation relative to SENSORIS vehicle coordinate system.
+  MountingPositionAndOrientation mounting_position_and_orientation = 1;
+
+  // If specific information is not set, then the sensor is of generic type.
+  oneof specific {
+    // Navigation satellite system.
+    NavigationSatelliteSystem navigation_satellite_system = 2;
+  }
+}
+
+//
+// Sensor fusion.
+//
+
+// Sensor fusion.
+message SensorFusion {
+  // Fused sensors referenced by their Source.id.
+  repeated google.protobuf.Int64Value sensor_id = 1;
+}
+
+//
+// Source.
+//
+
+// Source.
+message Source {
+  // Identifier, shall be unique for all sensors and sensor fusions in a data message.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [1, )
+  google.protobuf.Int64Value id = 1;
+
+  // Information about the source entity which may be a sensor or a sensor fusion software providing the information. The primary id might be the company name as the manufacturer of the sensor whereas the secondary id might be a specific name of the sensor.
+  //
+  // @example Values primary_id: "ABC Sensors Ltd.", secondary_id: "Mono Color Generation 8 Front", type: "Camera".
+  sensoris.protobuf.types.base.Entity entity = 2;
+
+  // Sensor sampling frequency.
+  //
+  // @unit Hertz
+  // @resolution 0.001
+  // @range [0, )
+  sensoris.protobuf.types.base.Int64Value sampling_frequency = 3 [(sensoris.protobuf.types.base.exponent) = 3];
+
+  oneof source {
+    // Sensor.
+    Sensor sensor = 4;
+
+    // Sensor fusion.
+    SensorFusion sensor_fusion = 5;
+  }
+
+  // Proprietary extension.
+  repeated google.protobuf.Any extension = 15;
+}

@@ -1,0 +1,169 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.trafficmaneuver;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.trafficmaneuver";
+option java_outer_classname = "SensorisTrafficManeuverCategory";
+option java_multiple_files = true;
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+
+// Vehicle maneuvers on the road.
+//
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.objectdetection.MovableObject
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.objectdetection.StaticObject
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.localization.VehicleSpeed
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.localization.VehicleAcceleration
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.localization.VehicleRotationRate
+message Maneuver {
+  // Type and confidence.
+  message TypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Evasive maneuver is used to describe a maneuver taken to avoid an obstacle or danger.
+      EVASIVE = 1;
+      // Any lane change.
+      LANE_CHANGE = 2;
+      // Lane change to the right.
+      LANE_CHANGE_RIGHT = 3;
+      // Lane change to the left.
+      LANE_CHANGE_LEFT = 4;
+      // Overtaking.
+      OVERTAKING = 5;
+      // Intersection stopping.
+      INTERSECTION_STOP = 6;
+      // Any turning.
+      TURNING = 7;
+      // Turning right.
+      TURNING_RIGHT = 8;
+      // Turning left.
+      TURNING_LEFT = 9;
+      // Sharp turning right.
+      SHARP_TURNING_RIGHT = 10;
+      // Sharp turning left.
+      SHARP_TURNING_LEFT = 11;
+      // Accelerating.
+      ACCELERATING = 12;
+      // Breaking.
+      BREAKING = 13;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Type and confidence.
+  TypeAndConfidence type_and_confidence = 2;
+}
+
+// Charging activity (maneuver).
+message Charging {
+  // Type.
+  enum Type {
+    // Unknown.
+    UNKNOWN_TYPE = 0;
+    // Level 2 Port J1772 connector.
+    PORT_J1772 = 1;
+    // CHAdeMO.
+    CHADEMO = 2;
+    // SAE Combo CCS.
+    SAE_COMBO = 3;
+    // Tesla HPWC.
+    TESLA_HPWC = 4;
+    // Tesla supercharger.
+    TESLA_SUPERCHARGER = 5;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Type.
+  Type type = 2;
+
+  // Voltage and accuracy measured by the vehicle.
+  //
+  // @unit Volt
+  // @resolution 1
+  // @range [0, )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy voltage_and_accuracy = 3 [(sensoris.protobuf.types.base.exponent) = 0];
+
+  // Current and accuracy provided to the vehicle.
+  //
+  // @unit Ampere
+  // @resolution 0.1
+  // @range [0, )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy current_and_accuracy = 4 [(sensoris.protobuf.types.base.exponent) = 1];
+}
+
+// Refueling activity (maneuver).
+message Refueling {
+  // Type.
+  enum Type {
+    // Unknown.
+    UNKNOWN_TYPE = 0;
+    // Petrol - PREMIUM (95 RON).
+    PETROL_PREMIUM = 1;
+    // Petrol - SUPRT (97/98 RON)
+    PETROL_SUPER = 2;
+    // Diesel.
+    DIESEL = 3;
+    // Liquefied Petroleum Gas.
+    LPG = 4;
+    // Compressed Natural Gas.
+    CNG = 5;
+    // Bio Diesel.
+    BIO_DIESEL = 6;
+    // Bio Ethanol.
+    BIO_ETHANOL = 7;
+    // Hydrogen for Fuel Cell.
+    HYDROGEN = 8;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Type.
+  Type type = 2;
+
+  // The amount of fuel in litres (for fuel) / kilograms (for gas) and accuracy required to achieve a full tank.
+  //
+  // @unit Litre / KiloGram
+  // @resolution 0.1
+  // @range (0, )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy quantity_to_full_and_accuracy = 3 [(sensoris.protobuf.types.base.exponent) = 1];
+}
+
+// Traffic maneuver category.
+message TrafficManeuverCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Maneuver.
+  repeated Maneuver maneuver = 2;
+
+  // Charging.
+  repeated Charging charging = 3;
+
+  // Refueling.
+  repeated Refueling refueling = 4;
+}

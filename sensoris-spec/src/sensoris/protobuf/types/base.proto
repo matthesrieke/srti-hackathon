@@ -1,0 +1,423 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.types.base;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.types.base";
+option java_outer_classname = "SensorisBaseTypes";
+option java_multiple_files = true;
+
+// Import Google message types.
+import "google/protobuf/any.proto";
+import "google/protobuf/descriptor.proto";
+import "google/protobuf/wrappers.proto";
+
+//
+// Exponent as field options.
+//
+
+extend google.protobuf.FieldOptions {
+  // Field option exponent describes the exponent to the base of 10 for translation of the interpretation factor. The default value is 0.
+  //
+  // If a field of a message type is using the exponent option, the exponent value is propagated down into the fields of the message type.
+  //
+  // Upper exponent value are overwritten by lower exponent Values.
+  //
+  // @example In a field of type int64 with the exponent 3, a measurement value of 123.123456 is stored as (int)measurement * 10^(exponent) = 123123 and interpreted as value / 10^(exponent) = 123.123.
+  // @example In a field of type Int64ValueAndAccuracy with the exponent 5, the exponent is propagated down into the field number 1 ValueAndAccuracy value_and_accuracy and recursively into the field number 1 int64 value of the type ValueAndAccuracy and into the field accuracy of the type ValueAndAccuracy.
+  int64 exponent = 50001;
+}
+
+//
+// Metadata base types.
+//
+
+// Version.
+message Version {
+  // Major version.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [0, )
+  google.protobuf.Int64Value major = 1;
+
+  // Minor version.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [0, )
+  google.protobuf.Int64Value minor = 2;
+
+  // Patch version.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [0, )
+  google.protobuf.Int64Value patch = 3;
+
+  // Name.
+  google.protobuf.StringValue name = 4;
+}
+
+// Entity.
+message Entity {
+  // First level identifier.
+  google.protobuf.StringValue primary_id = 1;
+
+  // Second level identifier.
+  google.protobuf.StringValue secondary_id = 2;
+
+  // Type.
+  google.protobuf.StringValue type = 3;
+
+  // Software version.
+  Version software_version = 4;
+
+  // Hardware version.
+  Version hardware_version = 5;
+
+  // Proprietary extension.
+  repeated google.protobuf.Any extension = 15;
+}
+
+//
+// Temporal base types.
+//
+
+// Timestamp.
+//
+// Timestamp may be also used to model duration.
+message Timestamp {
+  // POSIX time in milliseconds.
+  //
+  // @unit MilliSecond
+  // @resolution 1
+  // @range [0, )
+  google.protobuf.Int64Value posix_time = 1;
+
+  // Microseconds fraction of POSIX time.
+  //
+  // @unit MicroSecond
+  // @resolution 1
+  // @range [0, 1000)
+  google.protobuf.Int64Value posix_time_fraction = 2 [(exponent) = 0];
+}
+
+// Timestamp interval [start inclusive, end exclusive).
+message TimestampInterval {
+  // Start of interval inclusive.
+  Timestamp start_inclusive = 1;
+
+  // End of interval exclusive.
+  Timestamp end_exclusive = 2;
+}
+
+//
+// Event base types.
+//
+
+// Event envelope is the mandatory first field of each event.
+message EventEnvelope {
+  // Identifier, shall be unique for all events in a data message.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [1, )
+  google.protobuf.Int64Value id = 1;
+
+  // Timestamp.
+  //
+  // This is the timestamp of when the event has been detected. In case of a longer identification cycle, the actual timestamp of detection needs to be back-calculated.
+  //
+  // @example At time t = 10, a traffic sign is observed with the camera sensor. At time t = 15, the processing unit calculates the existence and position of the traffic sign, then the traffic sign event with t = 10 is to be created, so that the relative position fits to the localization of the vehicle at t = 10 in the sensoris.protobuf.categories.localization.VehiclePositionAndOrientation event.
+  sensoris.protobuf.types.base.Timestamp timestamp = 2;
+
+  // Proprietary extension.
+  //
+  // An event proprietary extension provides additional information for the specific event, e.g. provides metadata for the set event fields or adds additional information that is not part of the SENSORIS specification.
+  repeated google.protobuf.Any extension = 15;
+}
+
+// Event detection status.
+message EventDetectionStatus {
+  // Type.
+  enum Type {
+    // Unknown.
+    UNKNOWN_TYPE = 0;
+    // Expected and detected by vehicle.
+    EXPECTED_AND_DETECTED = 1;
+    // Expected and not detected by vehicle, without further specification of the reason for the non detection.
+    EXPECTED_AND_NOT_DETECTED = 2;
+    // Expected and not detected by vehicle due to blocked access, e.g. vision of camera sensor to expected event is blocked.
+    EXPECTED_AND_NOT_DETECTED_ACCESS_BLOCKED = 3;
+    // Expected and not detected by vehicle although access is not blocked, e.g. vision of camera sensor to expected event is free.
+    EXPECTED_AND_NOT_DETECTED_ACCESS_AVAILABLE = 4;
+    // Not expected and detected by vehicle.
+    NOT_EXPECTED_AND_DETECTED = 5;
+  }
+
+  // Type.
+  Type type = 1;
+
+  // Confidence of type.
+  Confidence confidence = 2;
+}
+
+//
+// Category base types.
+//
+
+// Category envelope is the mandatory first field of each category.
+message CategoryEnvelope {
+  // Proprietary extension.
+  //
+  // A category proprietary extension provides an additional event type, that is not part of the SENSORIS specification.
+  repeated google.protobuf.Any extension = 15;
+}
+
+//
+// Numeric base types.
+//
+
+// Type of statistic measure.
+enum StatisticMeasureType {
+  // Unknown.
+  UNKNOWN_STATISTIC_MEASURE_TYPE = 0;
+  // Minimum.
+  MINIMUM = 1;
+  // Maximum.
+  MAXIMUM = 2;
+  // Average.
+  AVERAGE = 3;
+  // Median.
+  MEDIAN = 4;
+}
+
+// Statistic measure of int64 value.
+message Int64StatisticMeasure {
+  // Timestamp interval.
+  TimestampInterval timestamp_interval = 1;
+
+  // Type.
+  StatisticMeasureType type = 2;
+
+  // Value.
+  int64 value = 3;
+}
+
+// Statistic measure of int64 value and accuracy.
+message Int64StatisticMeasureAndAccuracy {
+  // Timestamp interval.
+  TimestampInterval timestamp_interval = 1;
+
+  // Type.
+  StatisticMeasureType type = 2;
+
+  // Value.
+  int64 value = 3;
+
+  // Accuracy.
+  google.protobuf.Int64Value accuracy = 4;
+}
+
+// Absolute histogram of int64 values, i.e. bins contain absolute number of total number of elements.
+message AbsoluteInt64Histogram {
+  // Bin.
+  //
+  // The range of a bin is defined as [lower_endpoint_inclusive, lower_endpoint_inclusive of following bin). The range of the last bin is defined as [lower_endpoint_inclusive, upper_endpoint_inclusive]. The corresponding exponent to the attribute is also used for the bin-values.
+  //
+  // @example Unequal sized bins [0, 10) [10, 40) [40, 50].
+  message Bin {
+    // Lower end point of bin.
+    google.protobuf.Int64Value lower_endpoint_inclusive = 1;
+
+    // Absolute frequency.
+    //
+    // @unit 1
+    // @resolution 1
+    // @range [0, )
+    google.protobuf.Int64Value frequency = 2;
+  }
+
+  // Timestamp interval.
+  TimestampInterval timestamp_interval = 1;
+
+  // Total elements.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [1, )
+  google.protobuf.Int64Value total_elements = 2;
+
+  // Bin.
+  repeated Bin bin = 3;
+
+  // Upper endpoint of last bin.
+  google.protobuf.Int64Value upper_endpoint_inclusive = 4;
+}
+
+// Relative histogram of int64 values, i.e. bins contain relative percentage of total number of elements.
+message RelativeInt64Histogram {
+  // Bin.
+  //
+  // The range of a bin is defined as [lower_endpoint_inclusive, lower_endpoint_inclusive of following bin). The range of the last bin is defined as [lower_endpoint_inclusive, upper_endpoint_inclusive].  The corresponding exponent to the attribute is also used for the bin-values.
+  //
+  // @example Unequal sized bins [0, 10) [10, 40) [40, 50].
+  message Bin {
+    // Lower end point of bin.
+    google.protobuf.Int64Value lower_endpoint_inclusive = 1;
+
+    // Relative frequency.
+    //
+    // @unit Percent
+    // @resolution 0.1
+    // @range [0, 100]
+    google.protobuf.Int64Value relative_frequency = 3 [(exponent) = 1];
+  }
+
+  // Timestamp interval.
+  TimestampInterval timestamp_interval = 1;
+
+  // Total elements.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [1, )
+  google.protobuf.Int64Value total_elements = 2;
+
+  // Bin.
+  repeated Bin bin = 3;
+
+  // Upper endpoint of last bin.
+  google.protobuf.Int64Value upper_endpoint_inclusive = 4;
+}
+
+// Gaussian distribution of int64 values.
+message Int64GaussianDistribution {
+  // Timestamp interval.
+  TimestampInterval timestamp_interval = 1;
+
+  // Mean.
+  google.protobuf.Int64Value mean = 2;
+
+  // Variance.
+  google.protobuf.Int64Value variance = 3;
+}
+
+// Int64 value that is either one int64 value or provides statistics of several int64 values.
+message Int64Value {
+  oneof value_oneof {
+    // Value.
+    int64 value = 1;
+
+    // Statistic measure.
+    Int64StatisticMeasure statistic_measure = 2;
+
+    // Absolute histogram.
+    AbsoluteInt64Histogram absolute_histogram = 3;
+
+    // Relative histogram.
+    RelativeInt64Histogram relative_histogram = 4;
+
+    // Gaussian distribution.
+    Int64GaussianDistribution gaussian_distribution = 5;
+  }
+}
+
+// Int64 value that is either one int64 value and it's accuracy or provides statistics of several int64 values.
+message Int64ValueAndAccuracy {
+  // Int64 value and accuracy.
+  message ValueAndAccuracy {
+    // Value.
+    int64 value = 1;
+
+    // Accuracy.
+    google.protobuf.Int64Value accuracy = 2;
+  }
+
+  oneof value_oneof {
+    // Value and accuracy.
+    ValueAndAccuracy value_and_accuracy = 1;
+
+    // Statistic measure and accuracy.
+    Int64StatisticMeasureAndAccuracy statistic_measure_and_accuracy = 2;
+
+    // Absolute histogram.
+    AbsoluteInt64Histogram absolute_histogram = 3;
+
+    // Relative histogram.
+    RelativeInt64Histogram relative_histogram = 4;
+
+    // Gaussian distribution.
+    Int64GaussianDistribution gaussian_distribution = 5;
+  }
+}
+
+//
+// Confidence base types.
+//
+
+// Confidence.
+message Confidence {
+  // Value.
+  //
+  // @unit Percent
+  // @resolution 1
+  // @range (0, 100]
+  int64 value = 1 [(exponent) = 0];
+}
+
+// Count and confidence.
+message CountAndConfidence {
+  // Count.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [1, )
+  google.protobuf.Int64Value count = 1;
+
+  // Confidence of count.
+  sensoris.protobuf.types.base.Confidence confidence = 2;
+}
+
+//
+// Matrix base types.
+//
+
+// Matrix of int64 values with dimension of 3 horizontal rows x 3 vertical columns.
+message Int64Matrix3x3 {
+  google.protobuf.Int64Value a11 = 1;
+  google.protobuf.Int64Value a12 = 2;
+  google.protobuf.Int64Value a13 = 3;
+  google.protobuf.Int64Value a21 = 4;
+  google.protobuf.Int64Value a22 = 5;
+  google.protobuf.Int64Value a23 = 6;
+  google.protobuf.Int64Value a31 = 7;
+  google.protobuf.Int64Value a32 = 8;
+  google.protobuf.Int64Value a33 = 9;
+}
+
+//
+// System base types.
+//
+
+// System status.
+enum SystemStatus {
+  // Unknown.
+  UNKNOWN_SYSTEM_STATUS = 0;
+  // Active, i.e. system is on and controls vehicle.
+  ACTIVE = 1;
+  // Inactive, i.e. system is on and doesn't control vehicle.
+  INACTIVE = 2;
+  // Disabled, i.e. system is off, e.g. disabled by driver.
+  DISABLED = 3;
+}

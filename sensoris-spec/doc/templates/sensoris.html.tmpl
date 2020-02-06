@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>SENSORIS 1.0.0</title>
+  <link rel="stylesheet" type="text/css" href="css/semantic.min.css">
+  <link rel="stylesheet" type="text/css" href="css/sensoris.css">
+  <script src="js/jquery-3.3.1.min.js"></script>
+  <script src="js/semantic.min.js"></script>
+</head>
+<body>
+  <!-- Menu Start -->
+  <div class="ui top fixed borderless stackable menu">
+    <div class="ui container">
+      <a href="#" class="header item">SENSORIS 1.0.0</a>
+      <div class="right menu">
+        <div class="ui dropdown item">
+          Messages <i class="dropdown icon"></i>
+          <div class="menu">{{range .Files}}{{if eq .ParentPackage "sensoris.protobuf.messages"}}
+            <a class="item" href="#{{.Name}}">{{.BasePackage}}</a>{{end}}{{end}}
+          </div>
+        </div>
+        <div class="ui dropdown item">
+          Categories <i class="dropdown icon"></i>
+          <div class="menu">{{range .Files}}{{if eq .ParentPackage "sensoris.protobuf.categories"}}
+            <a class="item" href="#{{.Name}}">{{.BasePackage}}</a>{{end}}{{end}}
+          </div>
+        </div>
+        <div class="ui dropdown item">
+          Types <i class="dropdown icon"></i>
+          <div class="menu">{{range .Files}}{{if eq .ParentPackage "sensoris.protobuf.types"}}
+            <a class="item" href="#{{.Name}}">{{.BasePackage}}</a>{{end}}{{end}}
+            <a class="item" href="#google/protobuf/any.proto">any</a>
+            <a class="item" href="#google/protobuf/wrappers.proto">wrappers</a>
+            <a class="item" href="#protobuf_scalar_types">scalar</a>
+          </div>
+        </div>
+        <div class="ui right aligned search item">
+          <div class="ui transparent icon input">
+            <input class="prompt" type="text" placeholder="Search ...">
+            <i class="search link icon"></i>
+          </div>
+          <div class="results" style="width: auto;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Menu End -->
+  <!-- Hero Start -->
+  <div class="ui hero">
+    <div class="ui centered grid container">
+      <div class="row">
+        <div class="eight wide column">
+          <div class="ui horizontal list" style="margin-top: 20px; margin-left: 10px;">
+            <div class="ui item">
+              <h1 class="ui header" style="font-size: 4em; color: #fff;">
+                SENSORIS
+                <div class="sub header" style="font-size: 0.4em; color: #fff;">Sensor Interface Specification</div>
+              </h1>
+            </div>
+          </div>
+        </div>
+        <div class="eight wide column">
+          <div class="ui horizontal list" style="margin-top: 50px; margin-left: 20px; margin-right: 20px; float: right;">
+            <div class="ui item">
+              <svg fill="#ffffff" height="48" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                <path d="M0 0h24v24H0z" fill="none"/>
+              </svg>
+            </div>
+            <div class="ui item">
+              <svg fill="#ffffff" height="48" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/>
+                <path d="M0 0h24v24H0z" fill="none"/>
+              </svg>
+            </div>
+            <div class="ui item">
+              <svg fill="#ffffff" height="48" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 0h24v24H0z" fill="none"/>
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+              </svg>
+            </div>
+            <div class="ui item">
+              <svg fill="#ffffff" height="48" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/>
+                <path d="M0 0h24v24H0z" fill="none"/>
+              </svg>
+            </div>
+            <div class="ui item">
+              <svg fill="#ffffff" height="48" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 0h24v24H0z" fill="none"/>
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Hero End -->
+  <!-- Main Start -->
+  <div class="ui main">
+    <!-- Main Intro Start -->
+    <div class="ui container">
+      <div class="ui segments" style="margin-top: 40px;">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="sensoris.protobuf.messages.data.DataMessage">
+            <i class="quote left icon"></i>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>The Sensor Interface Specification (SENSORIS) defines an interface for requesting and sending vehicle sensor data from vehicles to clouds and across clouds. The specification and its standardization focus on the content and encoding of the interface.</p>
+          <p>The documentation of the SENSORIS schema is part of the protobuf schema itself, i.e. schema definition and documentation are located together. Documentation is written as protobuf comments. The comments in the protobuf schema are taken over automatically to the auto-generated data classes by the protobuf compiler.</p>
+        </div>
+      </div>
+    </div>
+    <!-- Main Intro End -->
+    {{range .Files}}{{if eq .ParentPackage "sensoris.protobuf.messages"}}{{$package := .Package}}
+    <!-- Main Messages File Hero Start -->
+    <div class="ui container file-hero">
+      <h2 class="ui header" id="{{.Name}}" style="color: #0f4470;">
+        <i class="folder icon"></i>
+        <div class="content">
+          {{.Name}}
+          <div class="sub header" style="color: #0f4470;">{{.Package}}</div>
+        </div>
+      </h2>
+    </div>
+    <!-- Main Messages File Hero End -->
+    <!-- Main Messages File Content Start -->
+    <div class="ui container">
+      {{range .Messages}}
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="{{.FullName}}">
+            <i class="envelope icon"></i>
+            <div class="content">{{.LongName}}</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>{{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: right;"/>{{end}}</p>
+          {{if .ProtoDoc.example}}<div class="example">Example: {{range $example := index .ProtoDoc "example"}}{{$example}} {{end}}</div>{{end}}
+          {{if .HasFields}}
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Field</th><th>Type</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Fields}}
+              <tr>
+                <td>{{.Name}}</td>
+                <td>
+                  {{if .Label}}{{.Label}} {{end}}<a href="#{{.FullType}}">{{.LongType}}</a>
+                  {{if or .ProtoDoc.unit .ProtoDoc.resolution .ProtoDoc.range}}
+                  <div class="ui labels">
+                    {{with index .ProtoDoc "unit"}}<div class="ui label">Unit<div class="detail">{{index . 0}}</div></div>{{end}}
+                    {{with index .ProtoDoc "resolution"}}<div class="ui label">Resolution<div class="detail">{{index . 0}}</div></div>{{end}}
+                    {{with index .ProtoDoc "range"}}<div class="ui label">Range<div class="detail">{{index . 0}}</div></div>{{end}}
+                  </div>
+                  {{end}}
+                </td>
+                <td>
+                  {{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: left;"/>{{end}}
+                  {{if .ProtoDoc.example}}<div class="example">Example: {{range $example := index .ProtoDoc "example"}}{{$example}} {{end}}</div>{{end}}
+                </td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+          {{end}}
+          {{if .ProtoDoc.relation}}
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Supported event relations</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range $relation := index .ProtoDoc "relation"}}
+              <tr>
+                <td>{{$relation}}</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+          {{end}}
+        </div>
+      </div>
+      {{end}}
+      {{range .Enums}}
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="{{.FullName}}">
+            <i class="bars icon"></i>
+            <div class="content">{{.LongName}}</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>{{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: right;"/>{{end}}</p>
+          {{if .ProtoDoc.example}}<div class="example">Example: {{range $example := index .ProtoDoc "example"}}{{$example}} {{end}}</div>{{end}}
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Name</th><th>#</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Values}}
+              <tr>
+                <td>{{.Name}}</td>
+                <td>{{.Number}}</td>
+                <td>{{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: left;"/>{{end}}</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {{end}}
+    </div>
+    {{end}}
+    <!-- Main Messages File Content End -->
+    {{end}}
+    {{range .Files}}{{if eq .ParentPackage "sensoris.protobuf.categories"}}{{$package := .Package}}
+    <!-- Main Categories File Hero Start -->
+    <div class="ui container file-hero">
+      <h2 class="ui header" id="{{.Name}}" style="color: #0f4470;">
+        <i class="folder icon"></i>
+        <div class="content">
+          {{.Name}}
+          <div class="sub header" style="color: #0f4470;">{{.Package}}</div>
+        </div>
+      </h2>
+    </div>
+    <!-- Main Categories File Hero End -->
+    <!-- Main Categories File Content Start -->
+    <div class="ui container">
+      {{range .Messages}}
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="{{.FullName}}">
+            <i class="envelope icon"></i>
+            <div class="content">{{.LongName}}</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>{{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: right;"/>{{end}}</p>
+          {{if .ProtoDoc.example}}<div class="example">Example: {{range $example := index .ProtoDoc "example"}}{{$example}} {{end}}</div>{{end}}
+          {{if .HasFields}}
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Field</th><th>Type</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Fields}}
+              <tr>
+                <td>{{.Name}}</td>
+                <td>
+                  {{if .Label}}{{.Label}} {{end}}<a href="#{{.FullType}}">{{.LongType}}</a>
+                  {{if or .ProtoDoc.unit .ProtoDoc.resolution .ProtoDoc.range}}
+                  <div class="ui labels">
+                    {{with index .ProtoDoc "unit"}}<div class="ui label">Unit<div class="detail">{{index . 0}}</div></div>{{end}}
+                    {{with index .ProtoDoc "resolution"}}<div class="ui label">Resolution<div class="detail">{{index . 0}}</div></div>{{end}}
+                    {{with index .ProtoDoc "range"}}<div class="ui label">Range<div class="detail">{{index . 0}}</div></div>{{end}}
+                  </div>
+                  {{end}}
+                </td>
+                <td>
+                  {{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: left;"/>{{end}}
+                  {{if .ProtoDoc.example}}<div class="example">Example: {{range $example := index .ProtoDoc "example"}}{{$example}} {{end}}</div>{{end}}
+                </td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+          {{end}}
+          {{if .ProtoDoc.relation}}
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Supported event relations</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range $relation := index .ProtoDoc "relation"}}
+              <tr>
+                <td>{{$relation}}</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+          {{end}}
+        </div>
+      </div>
+      {{end}}
+      {{range .Enums}}
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="{{.FullName}}">
+            <i class="bars icon"></i>
+            <div class="content">{{.LongName}}</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>{{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: right;"/>{{end}}</p>
+          {{if .ProtoDoc.example}}<div class="example">Example: {{range $example := index .ProtoDoc "example"}}{{$example}} {{end}}</div>{{end}}
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Name</th><th>#</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Values}}
+              <tr>
+                <td>{{.Name}}</td>
+                <td>{{.Number}}</td>
+                <td>{{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: left;"/>{{end}}</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {{end}}
+    </div>
+    {{end}}
+    <!-- Main Categories File Content End -->
+    {{end}}
+    {{range .Files}}{{if eq .ParentPackage "sensoris.protobuf.types"}}{{$package := .Package}}
+    <!-- Main Types File Hero Start -->
+    <div class="ui container file-hero">
+      <h2 class="ui header" id="{{.Name}}" style="color: #0f4470;">
+        <i class="folder icon"></i>
+        <div class="content">
+          {{.Name}}
+          <div class="sub header" style="color: #0f4470;">{{.Package}}</div>
+        </div>
+      </h2>
+    </div>
+    <!-- Main Types File Hero End -->
+    <!-- Main Types File Content Start -->
+    <div class="ui container">
+      {{range .Messages}}
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="{{.FullName}}">
+            <i class="envelope icon"></i>
+            <div class="content">{{.LongName}}</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>{{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: right;"/>{{end}}</p>
+          {{if .ProtoDoc.example}}<div class="example">Example: {{range $example := index .ProtoDoc "example"}}{{$example}} {{end}}</div>{{end}}
+          {{if .HasFields}}
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Field</th><th>Type</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Fields}}
+              <tr>
+                <td>{{.Name}}</td>
+                <td>
+                  {{if .Label}}{{.Label}} {{end}}<a href="#{{.FullType}}">{{.LongType}}</a>
+                  {{if or .ProtoDoc.unit .ProtoDoc.resolution .ProtoDoc.range}}
+                  <div class="ui labels">
+                    {{with index .ProtoDoc "unit"}}<div class="ui label">Unit<div class="detail">{{index . 0}}</div></div>{{end}}
+                    {{with index .ProtoDoc "resolution"}}<div class="ui label">Resolution<div class="detail">{{index . 0}}</div></div>{{end}}
+                    {{with index .ProtoDoc "range"}}<div class="ui label">Range<div class="detail">{{index . 0}}</div></div>{{end}}
+                  </div>
+                  {{end}}
+                </td>
+                <td>
+                  {{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: left;"/>{{end}}
+                  {{if .ProtoDoc.example}}<div class="example">Example: {{range $example := index .ProtoDoc "example"}}{{$example}} {{end}}</div>{{end}}
+                </td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+          {{end}}
+          {{if .ProtoDoc.relation}}
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Supported event relations</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range $relation := index .ProtoDoc "relation"}}
+              <tr>
+                <td>{{$relation}}</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+          {{end}}
+        </div>
+      </div>
+      {{end}}
+      {{range .Enums}}
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="{{.FullName}}">
+            <i class="bars icon"></i>
+            <div class="content">{{.LongName}}</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>{{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: right;"/>{{end}}</p>
+          {{if .ProtoDoc.example}}<div class="example">Example: {{range $example := index .ProtoDoc "example"}}{{$example}} {{end}}</div>{{end}}
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Name</th><th>#</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Values}}
+              <tr>
+                <td>{{.Name}}</td>
+                <td>{{.Number}}</td>
+                <td>{{.Description}}{{range $img := index .ProtoDoc "img"}}<img src="img/{{$package}}/{{$img}}" style="float: left;"/>{{end}}</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {{end}}
+    </div>
+    {{end}}
+    <!-- Main Types File Content End -->
+    {{end}}
+    <!-- Main Google Types Hero Start -->
+    <div class="ui container file-hero">
+      <h2 class="ui header" id="google/protobuf/any.proto" style="color: #0f4470;">
+        <i class="folder icon"></i>
+        <div class="content">
+          google/protobuf/any.proto
+          <div class="sub header" style="color: #0f4470;">google.protobuf</div>
+        </div>
+      </h2>
+    </div>
+    <!-- Main Google Types Hero End -->
+    <!-- Main Google Types Content Start -->
+    <div class="ui container">
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="google.protobuf.Any">
+            <i class="envelope icon"></i>
+            <div class="content">Any</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>Any contains an arbitrary serialized protocol buffer message along with a URL that describes the type of the serialized message.</p>
+          <p>Protobuf library provides support to pack/unpack Any values in the form of utility functions or additional generated methods of the Any type.</p>
+          <p>The pack methods provided by protobuf library will by default use 'type.googleapis.com/full.type.name' as the type URL and the unpack methods only use the fully qualified type name after the last '/' in the type URL, for example "foo.bar.com/x/y.z" will yield type name "y.z".</p>
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Field</th><th>Type</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>type_url</td>
+                <td>
+                  <a href="#string">string</a>
+                </td>
+                <td>A URL/resource name whose content describes the type of the serialized protocol buffer message.</td>
+              </tr>
+              <tr>
+                <td>value</td>
+                <td>
+                  <a href="#bytes">bytes</a>
+                </td>
+                <td>Must be a valid serialized protocol buffer of the above specified type.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- Main Google Types Content End -->
+    <!-- Main Google Types Hero Start -->
+    <div class="ui container file-hero">
+      <h2 class="ui header" id="google/protobuf/wrappers.proto" style="color: #0f4470;">
+        <i class="folder icon"></i>
+        <div class="content">
+          google/protobuf/wrappers.proto
+          <div class="sub header" style="color: #0f4470;">google.protobuf</div>
+        </div>
+      </h2>
+    </div>
+    <!-- Main Google Types Hero End -->
+    <!-- Main Google Types Content Start -->
+    <div class="ui container">
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="google.protobuf.BoolValue">
+            <i class="envelope icon"></i>
+            <div class="content">BoolValue</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>Wrapper message for bool.</p>
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Field</th><th>Type</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>value</td>
+                <td>
+                  <a href="#bool">bool</a>
+                </td>
+                <td>The bool value.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="google.protobuf.BytesValue">
+            <i class="envelope icon"></i>
+            <div class="content">BytesValue</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>Wrapper message for bytes.</p>
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Field</th><th>Type</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>value</td>
+                <td>
+                  <a href="#bytes">bytes</a>
+                </td>
+                <td>The bytes value.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="google.protobuf.Int64Value">
+            <i class="envelope icon"></i>
+            <div class="content">Int64Value</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>Wrapper message for int64.</p>
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Field</th><th>Type</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>value</td>
+                <td>
+                  <a href="#int64">int64</a>
+                </td>
+                <td>The int64 value.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment" id="google.protobuf.StringValue">
+            <i class="envelope icon"></i>
+            <div class="content">StringValue</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>Wrapper message for string.</p>
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Field</th><th>Type</th><th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>value</td>
+                <td>
+                  <a href="#string">string</a>
+                </td>
+                <td>The string value.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- Main Google Types Content End -->
+    <!-- Main Scalar Value Types Hero Start -->
+    <div class="ui container file-hero">
+      <h2 class="ui header" id="protobuf_scalar_types" style="color: #0f4470;">
+        <i class="folder icon"></i>
+        <div class="content">
+          Scalar Value Types
+          <div class="sub header" style="color: #0f4470;">google.protobuf</div>
+        </div>
+      </h2>
+    </div>
+    <!-- Main Scalar Value Types Hero End -->
+    <!-- Main Scalar Value Types Content Start -->
+    <div class="ui container">
+      <div class="ui segments">
+        <div class="ui secondary segment">
+          <h4 class="ui header header-segment">
+            <i class="block layout icon"></i>
+            <div class="content">Scalar Value Types</div>
+          </h4>
+        </div>
+        <div class="ui segment">
+          <p>Protobuf scalar value types.</p>
+          <table class="ui collapsing striped very compact table">
+            <thead>
+              <tr>
+                <th>Type</th><th>Notes</th><th>C++ Type</th><th>Java Type</th><th>Python Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr id="int64">
+                <td>int64</td>
+                <td>Uses variable-length encoding.</td>
+                <td>int64</td>
+                <td>long</td>
+                <td>int/long</td>
+              </tr>
+              <tr id="bool">
+                <td>bool</td>
+                <td></td>
+                <td>bool</td>
+                <td>boolean</td>
+                <td>boolean</td>
+              </tr>
+              <tr id="string">
+                <td>string</td>
+                <td>A string must always contain UTF-8 encoded or 7-bit ASCII text.</td>
+                <td>string</td>
+                <td>String</td>
+                <td>str/unicode</td>
+              </tr>
+              <tr id="bytes">
+                <td>bytes</td>
+                <td>May contain any arbitrary sequence of bytes.</td>
+                <td>string</td>
+                <td>ByteString</td>
+                <td>str</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- Main Scalar Value Types Content End -->
+  </div>
+  <!-- Main End -->
+  <!-- Footer Start -->
+  <div class="ui footer">
+    <div class="ui container" style="padding-left: 10px;">
+      <p>Copyright <i class="copyright icon"></i> 2017, 2019 <a href="http://sensor-is.org/">SENSORIS Innovation Platform hosted by ERTICO - ITS Europe</a>.</p>
+      <p>This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.</p>
+      <p><i class="truck icon"></i> Documentation manufactured with <a href="https://github.com/pseudomuto/protoc-gen-doc">protoc-gen-doc</a> (<a href="templates/LICENSE.protoc-gen-doc.txt">MIT license</a>), <a href="https://golang.org/">Go</a>, <a href="https://semantic-ui.com/">Semantic UI</a> (<a href="js/LICENSE.semantic-ui.txt">MIT license</a>), <a href="https://jquery.com/">jQuery</a> (<a href="js/LICENSE.jquery.txt">MIT license</a>), <a href="http://www.latofonts.com/">Lato font</a> (<a href="fonts/LICENSE.lato.txt">SIL Open Font License 1.1</a>), <a href="https://material.io/tools/icons/">Google Material Icons</a> (<a href="">Apache license v2.0</a>).</p>
+    </div>
+  </div>
+  <!-- Footer End -->
+  <!-- Search Start -->
+  <script type="text/javascript">
+  var categoryContent = [ {{range .Files}}{{$basePackage := .BasePackage}}{{range .Messages}}
+    { category: '{{$basePackage}}', title: '{{.LongName}}', url: '#{{.FullName}}' },{{end}}{{end}}
+  ];
+
+  $('.ui.search')
+  .search({
+    type: 'category',
+    source: categoryContent,
+    minCharacters: 2,
+    maxResults: 20
+  });
+
+  $(document)
+  .ready(function() {
+    $('.ui.dropdown').dropdown({
+      on: 'hover'
+    });
+  });
+</script>
+<!-- Search End -->
+</body>
+</html>

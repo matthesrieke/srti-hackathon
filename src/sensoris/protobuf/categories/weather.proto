@@ -1,0 +1,88 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.weather;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.weather";
+option java_outer_classname = "SensorisWeatherCategory";
+option java_multiple_files = true;
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+
+// Precipitation describes precipitation type and intensity (either as a percentage or mm/h).
+message Precipitation {
+  // Type and confidence of type.
+  //
+  // @example Precipitation type identified as RAIN, with 50 % confidence.
+  message TypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // No precipitation.
+      NONE = 1;
+      // Rain.
+      RAIN = 2;
+      // Mixed rain and snow.
+      MIXED_RAIN_SNOW = 3;
+      // Snow.
+      SNOW = 4;
+      // Hail, sleet or freezing rain.
+      HAIL = 5;
+    }
+
+    // Type
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 2;
+
+  // Type and confidence of type.
+  //
+  // If type is NONE, then intensity shall not be set.
+  TypeAndConfidence type_and_confidence = 3;
+
+  oneof intensity {
+    // Intensity as percentage of maximum intensity.
+    //
+    // Intensity as percentage is non-standardized and may vary, e.g. depending on sensor manufacturer, software and hardware version, or mounting position.
+    //
+    // @unit Percent
+    // @resolution 1
+    // @range (0, 100]
+    sensoris.protobuf.types.base.Int64ValueAndAccuracy relative_intensity_and_accuracy = 4 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Intensity.
+    //
+    // @unit MilliMeter per Hour
+    // @resolution 0.1
+    // @range (0, )
+    sensoris.protobuf.types.base.Int64ValueAndAccuracy absolute_intensity_and_accuracy = 5 [(sensoris.protobuf.types.base.exponent) = 1];
+  }
+}
+
+// Weather category.
+message WeatherCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Precipitation.
+  repeated Precipitation precipitation = 2;
+}

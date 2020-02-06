@@ -1,0 +1,275 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.trafficevents;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.trafficevents";
+option java_outer_classname = "SensorisTrafficEventsCategory";
+option java_multiple_files = true;
+
+// Import Google message types.
+import "google/protobuf/wrappers.proto";
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+import "sensoris/protobuf/types/spatial.proto";
+
+// Hazard.
+//
+// Detailed information about the hazard may be inidcated by an event relation from an object detection of type IMPACT.
+//
+// @relation 1..* sensoris.protobuf.categories.objectdetection.MovableObject IMPACT 1 sensoris.protobuf.categories.trafficevents.Hazard
+// @relation 1 sensoris.protobuf.categories.trafficevents.Hazard IMPACT 1 sensoris.protobuf.categories.trafficevents.DangerousSlowDown
+message Hazard {
+  // Type and confidence.
+  message TypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Obstruction such as fallen trees, parts of tires etc. (TPEG-TEC 10.0).
+      OBSTRUCTION = 1;
+      // Accident (TPEG-TEC 2.0).
+      ACCIDENT = 2;
+      // Vehicle breakdown (TPEG-TEC 13.2).
+      BROKEN_DOWN_VEHICLE = 3;
+      // Very slow vehicle, e.g. agriculture vehicles, road service vehicles, grass cutters etc. (TPEG-TEC 16.0).
+      SLOW_VEHICLE = 4;
+      // Vehicle driving opposite the allowed direction of travel (TPEG-TEC 14.0).
+      WRONG_WAY_VEHICLE = 5;
+      // Roadworks (TPEG-TEC 3.0)
+      ROADWORKS = 6;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Direction describes the direction of the hazard in reference to the ego vehicle.
+  enum Direction {
+    // Unknown.
+    UNKNOWN_DIRECTION = 0;
+    // In ego vehicle driving direction.
+    EGO_DIRECTION = 1;
+    // Opposite to ego vehicle driving direction.
+    OPPOSITE_DIRECTION = 2;
+    // In and opposite to ego vehicle driving direction.
+    BOTH = 3;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 2;
+
+  // Type and confidence.
+  TypeAndConfidence type_and_confidence = 3;
+
+  // Direction describes the direction of the hazard in reference to the ego vehicle.
+  Direction direction = 4;
+}
+
+// Dangerous slowdown of the ego vehicle (TPEG-TEC 27.0).
+//
+// The cause of the slowdown may be indicated by an event relation from the cause of type IMPACT.
+//
+// @relation 1 sensoris.protobuf.categories.trafficevents.Hazard IMPACT 1 sensoris.protobuf.categories.trafficevents.DangerousSlowDown
+// @relation 1 sensoris.protobuf.categories.trafficevents.TrafficCondition IMPACT 1 sensoris.protobuf.categories.trafficevents.DangerousSlowDown
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWorks IMPACT 1 sensoris.protobuf.categories.trafficevents.DangerousSlowDown
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWeatherCondition IMPACT 1 sensoris.protobuf.categories.trafficevents.DangerousSlowDown
+message DangerousSlowDown {
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Speed reduction and accuracy.
+  //
+  // @unit Meter Per Second
+  // @resolution 0.1
+  // @range ( , 0)
+  sensoris.protobuf.types.spatial.XyzVectorAndAccuracy speed_reduction_and_accuracy = 2 [(sensoris.protobuf.types.base.exponent) = 1];
+
+  // Time period over which the speed reduction was detected.
+  //
+  // @unit Second
+  // @resolution 1
+  // @range (0, )
+  google.protobuf.Int64Value time_period = 3 [(sensoris.protobuf.types.base.exponent) = 0];
+}
+
+// Traffic condition.
+//
+// If the vehicle experiences multiple traffic conditions (e.g. few hundred meters of slow traffic, then a section of stop and go, then another section of slow traffic etc.), multiple events may be generated (see also TPEG-TEC 1.0).
+//
+// The spatial extent of the traffic condition can be defined by an event relation of type START to a vehicle position and event relation of type END to another vehicle position.
+//
+// @relation 1 sensoris.protobuf.categories.trafficevents.TrafficCondition START_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.TrafficCondition END_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.TrafficCondition IMPACT 1 sensoris.protobuf.categories.trafficevents.DangerousSlowDown
+message TrafficCondition {
+  // Type and confidence.
+  message TypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Free flow.
+      FREE_FLOW = 1;
+      // Heavy traffic.
+      HEAVY = 2;
+      // Slow traffic.
+      SLOW = 3;
+      // Queuing traffic.
+      QUEUING = 4;
+      // Stationary traffic.
+      STATIONARY = 5;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 2;
+
+  // Type and confidence.
+  TypeAndConfidence type_and_confidence = 3;
+}
+
+// Roadworks.
+//
+// Event is used to report the start and end of a roadworks section (TEPG_TEC 3.0).
+//
+// Speed limit can be reported using sign detection.
+//
+// May also contain a report of the number of lanes closed.
+//
+// @relation 1..* sensoris.protobuf.categories.trafficregulation.TrafficSign IMPACT 1 sensoris.protobuf.categories.trafficevents.RoadWorks
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWorks START_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWorks END_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWorks IMPACT 1 sensoris.protobuf.categories.trafficevents.DangerousSlowDown
+message RoadWorks {
+  // Type and confidence.
+  message TypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Start.
+      START = 1;
+      // End.
+      END = 2;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 2;
+
+  // Type and confidence.
+  TypeAndConfidence type_and_confidence = 3;
+
+  // Total number of closed lanes.
+  sensoris.protobuf.types.base.CountAndConfidence lanes_closed_and_confidence = 5;
+}
+
+// Road weather condition.
+//
+// The spatial extent of the road weather condition can be defined by an event relation of type START to a vehicle position and event relation of type END to another vehicle position.
+//
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWeatherCondition START_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWeatherCondition END_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWeatherCondition IMPACT 1 sensoris.protobuf.categories.trafficevents.DangerousSlowDown
+message RoadWeatherCondition {
+  // Type and confidence.
+  message TypeAndConfidence {
+    // Type.
+    //
+    // The values follow the definitions of TPEG-TEC.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Snow (TPEG-TEC 6.4).
+      SNOW = 1;
+      // Ice (TPEG-TEC 6.5).
+      ICE = 2;
+      // Freezing rain / black ice (TPEG-TEC 6.6).
+      FREEZING_RAIN = 3;
+      // Frost (TPEG-TEC 6.1).
+      FROST = 4;
+      // Hydroplaning (TPEG-TEC 7.0)
+      HYDROPLANING = 5;
+      // Flooding (TPEG-TEC 5.1)
+      FLOODING = 6;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 2;
+
+  // Type and confidence.
+  TypeAndConfidence type_and_confidence = 3;
+
+  // Depth of water or snow on road and accuracy.
+  //
+  // @unit MilliMeter
+  // @resolution 1
+  // @range (0, )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy depth_and_accuracy = 4 [(sensoris.protobuf.types.base.exponent) = 0];
+}
+
+// Traffic events category.
+message TrafficEventsCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Hazard.
+  repeated Hazard hazard = 2;
+
+  // Dangerous slowdown of the ego vehicle.
+  repeated DangerousSlowDown dangerous_slow_down = 3;
+
+  // Traffic condition.
+  repeated TrafficCondition traffic_condition = 4;
+
+  // Roadworks.
+  repeated RoadWorks roadworks = 5;
+
+  // Road weather condition.
+  repeated RoadWeatherCondition road_weather_condition = 6;
+}

@@ -1,0 +1,598 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.types.spatial;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.types.spatial";
+option java_outer_classname = "SensorisSpatialTypes";
+option java_multiple_files = true;
+
+// Import Google message types.
+import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+
+//
+// Position.
+//
+
+// Geographic or metric position and metric accuracy.
+message PositionAndAccuracy {
+  // Geographic position in reference system.
+  message Geographic {
+    // Longitude.
+    //
+    // @unit Degree
+    // @resolution 0.00000001
+    // @range [-180, 180)
+    sensoris.protobuf.types.base.Int64Value longitude = 1 [(sensoris.protobuf.types.base.exponent) = 8];
+
+    // Latitude.
+    //
+    // @unit Degree
+    // @resolution 0.00000001
+    // @range [-90, 90]
+    sensoris.protobuf.types.base.Int64Value latitude = 2 [(sensoris.protobuf.types.base.exponent) = 8];
+
+    // Altitude.
+    //
+    // @unit Meter
+    // @resolution 0.001
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value altitude = 3 [(sensoris.protobuf.types.base.exponent) = 3];
+  }
+
+  // Metric position in reference system.
+  message Metric {
+    // Delta on x-axis.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value x = 1 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Delta on y-axis.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value y = 2 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Delta on z-axis.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value z = 3 [(sensoris.protobuf.types.base.exponent) = 0];
+  }
+
+  // Accuracy as standard deviation of metric horizontal position and vertical position.
+  message HorizontalVerticalStdDev {
+    // Standard deviation of metric horizontal position.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range [0, )
+    google.protobuf.Int64Value horizontal = 1 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Standard deviation of metric vertical position.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range [0, )
+    google.protobuf.Int64Value vertical = 2 [(sensoris.protobuf.types.base.exponent) = 0];
+  }
+
+  // Accuracy as metric horizontal confidence ellipse and standard deviation of metric vertical position.
+  message HorizontalConfidenceEllipseVerticalStdDev {
+    // Metric length of major axis of confidence ellipse.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range (0, )
+    google.protobuf.Int64Value horizontal_ellipse_major = 1 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Metric length of minor axis of confidence ellipse.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range (0, )
+    google.protobuf.Int64Value horizontal_ellipse_minor = 2 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Heading of major axis of confidence ellipse, references geographic north with 0 degree north, 90 degree east, 180 degree south and 270 degree west.
+    //
+    // @unit Degree
+    // @resolution 0.01
+    // @range [0, 360)
+    google.protobuf.Int64Value horizontal_ellipse_major_heading = 3 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Standard deviation of metric vertical position.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range [0, )
+    google.protobuf.Int64Value vertical = 4 [(sensoris.protobuf.types.base.exponent) = 0];
+  }
+
+  oneof geographic_metric {
+    // Geographic position in World Geodetic System 84 (WGS84) reference system.
+    Geographic geographic_wgs84 = 1;
+
+    // Metric position in SENSORIS vehicle coordinate system.
+    Metric metric_vehicle = 2;
+
+    // Metric position in relative coordinate system, the reference coordinate system is the origin of the event group.
+    Metric metric_event_group = 3;
+
+    // Metric position in Earth-Centered Earth-Fixed (ECEF) reference system.
+    Metric metric_ecef = 4;
+  }
+
+  oneof accuracy {
+    // Accuracy as combined standard deviation of metric horizontal and metric vertical position.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range [0, )
+    google.protobuf.Int64Value combined_std_dev = 5 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Accuracy as standard deviation of metric horizontal position and metric vertical position.
+    HorizontalVerticalStdDev std_dev = 6;
+
+    // Accuracy as metric horizontal confidence ellipse and standard deviation of metric vertical position.
+    HorizontalConfidenceEllipseVerticalStdDev horizontal_confidence_ellipse_vertical_std_dev = 7;
+
+    // Accuracy as 3 x 3 covariance matrix of metric position of (x, x), (x, y), (x, z), (y, x), (y, y), (y, z), (z, x), (z, y), (z, z).
+    //
+    // @unit MilliMeter squared
+    // @resolution 1
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Matrix3x3 covariance = 8 [(sensoris.protobuf.types.base.exponent) = 0];
+  }
+
+  // Proprietary extension.
+  repeated google.protobuf.Any extension = 15;
+}
+
+//
+// Polyline.
+//
+
+// Polyline of geographic or metric positions and metric accuracy.
+message PolylineAndAccuracy {
+  // Polyline vertex position and accuracy.
+  repeated PositionAndAccuracy position_and_accuracy = 1;
+
+  // Proprietary extension.
+  repeated google.protobuf.Any extension = 15;
+}
+
+//
+// Generic (x, y, z) vector.
+//
+
+// Generic (x, y, z) vector and accuracy.
+//
+// The vector may contain one, two or three values, e.g. only a value in direction of x-axis.
+message XyzVectorAndAccuracy {
+  // Accuracy as standard deviation of x value, y value and z value.
+  message StdDev {
+    // Standard deviation of x value.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range [0, )
+    google.protobuf.Int64Value x = 1 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Standard deviation of y value.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range [0, )
+    google.protobuf.Int64Value y = 2 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Standard deviation of z value.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range [0, )
+    google.protobuf.Int64Value z = 3 [(sensoris.protobuf.types.base.exponent) = 0];
+  }
+
+  // Metric values in reference system.
+  message Metric {
+    // Value in direction of x-axis.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value x = 1 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Value in direction of y-axis.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value y = 2 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Value in direction of z-axis.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value z = 3 [(sensoris.protobuf.types.base.exponent) = 0];
+  }
+
+  oneof geometry {
+    // Metric (x, y, z) values in SENSORIS vehicle coordinate system.
+    Metric metric_vehicle = 1;
+
+    // Metric (x, y, z) values in relative coordinate system, the reference coordinate system is the origin of the event group.
+    Metric metric_event_group = 2;
+
+    // Metric (x, y, z) values in coordinate system specified by origin and orientation defined in enclosing type.
+    Metric metric_origin = 3;
+  }
+
+  oneof accuracy {
+    // Accuracy as combined standard deviation of x, y and z values.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range [0, )
+    google.protobuf.Int64Value combined_std_dev = 4 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Accuracy as standard deviation of x value, y value and z value.
+    StdDev std_dev = 5;
+
+    // Accuracy as 3 x 3 covariance matrix of (x, x), (x,y ), (x, z), (y, x), (y, y), (y, z), (z, x), (z, y), (z, z) values.
+    //
+    // @unit MilliMeter squared
+    // @resolution 1
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Matrix3x3 covariance = 6 [(sensoris.protobuf.types.base.exponent) = 0];
+  }
+
+  // Proprietary extension.
+  repeated google.protobuf.Any extension = 15;
+}
+
+//
+// Rectangular box.
+//
+
+// Rectangular box and accuracy.
+//
+// A rectangular box is defined by either
+// - three (x, y, z) corner vectors or by
+// - position of center point of box, orientation of box in center point and size of box in direction of x-, y- and z-axis of coordinate system defined by center point and orientation.
+//
+// A rectangular box may be also used to represent
+// - a bounding box oriented to the axes of the respective coordinate system or
+// - a two-dimensional rectangle.
+message RectangularBoxAndAccuracy {
+  // Rectangular box defined by three (x, y, z) corner vectors.
+  //
+  // If only two (x, y, z) corner vectors are set, then the rectangular box represents a bounding box oriented to the axes of the respective coordinate system.
+  message CornerVectors {
+    // First (x, y, z) corner vector and accuracy.
+    XyzVectorAndAccuracy first_and_accuracy = 1;
+
+    // Second (x, y, z) corner vector and accuracy.
+    XyzVectorAndAccuracy second_and_accuracy = 2;
+
+    // Third (x, y, z) corner vector and accuracy.
+    XyzVectorAndAccuracy third_and_accuracy = 3;
+  }
+
+  // Rectangular box defined by position of center point of box, orientation of box in center point and size of box in direction of x-, y- and z-axis of coordinate system defined by center point and orientation.
+  //
+  // If the orientation is not set, then the rectangular box represents a bounding box oriented to the axes of the respective coordinate system.
+  //
+  // If only two dimensions of the size are set, then the box represents a two-dimensional rectangle.
+  message CenterOrientationSize {
+    // Position and accuracy of center point of box.
+    PositionAndAccuracy center_position_and_accuracy = 1;
+
+    // Orientation and accuracy of box in center point.
+    RotationAndAccuracy orientation_and_accuracy = 2;
+
+    // Size and accuracy of box in direction of x-, y- and z-axis of coordinate system defined by center point as origin and orientation.
+    //
+    // The (x, y, z) values are set in the field metric origin.
+    XyzVectorAndAccuracy size_and_accuracy = 3;
+  }
+
+  oneof geometry {
+    // Rectangular box defined by three (x, y, z) corner vectors.
+    CornerVectors corner_vectors = 1;
+
+    // Rectangular box defined by position of center point of box, orientation of box in center point and size of box in direction of x-, y- and z-axis of coordinate system defined by center point and orientation.
+    CenterOrientationSize center_orientation_size = 2;
+  }
+
+  // Proprietary extension.
+  repeated google.protobuf.Any extension = 15;
+}
+
+//
+// Rotation.
+//
+
+// Rotation as Euler angles or quaternion and accuracy as Euler angles.
+message RotationAndAccuracy {
+  // Euler angles yaw, pitch and roll.
+  //
+  // Rotation order is yaw, pitch and roll.
+  message Euler {
+    // Yaw angle.
+    //
+    // @unit Degree
+    // @resolution 0.01
+    // @range [0, 360)
+    sensoris.protobuf.types.base.Int64Value yaw = 1 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Pitch angle.
+    //
+    // @unit Degree
+    // @resolution 0.01
+    // @range [0, 360)
+    sensoris.protobuf.types.base.Int64Value pitch = 2 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Roll angle.
+    //
+    // @unit Degree
+    // @resolution 0.01
+    // @range [0, 360)
+    sensoris.protobuf.types.base.Int64Value roll = 3 [(sensoris.protobuf.types.base.exponent) = 2];
+  }
+
+  // Quaternion.
+  //
+  // Usually sqrt(x^2 + y^2 + z^2 + w^2) = 1.
+  message Quaternion {
+    // Value of x.
+    //
+    // @resolution 0.001
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value x = 1 [(sensoris.protobuf.types.base.exponent) = 3];
+
+    // Value of y.
+    //
+    // @resolution 0.001
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value y = 2 [(sensoris.protobuf.types.base.exponent) = 3];
+
+    // Value of z.
+    //
+    // @resolution 0.001
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value z = 3 [(sensoris.protobuf.types.base.exponent) = 3];
+
+    // Value of w.
+    //
+    // @resolution 0.001
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value w = 4 [(sensoris.protobuf.types.base.exponent) = 3];
+  }
+
+  // Accuracy as standard deviation of yaw angle, pitch angle and roll angle.
+  message StdDev {
+    // Standard deviation of yaw angle.
+    //
+    // @unit Degree
+    // @resolution 0.01
+    // @range [0, 360)
+    google.protobuf.Int64Value yaw = 1 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Standard deviation of pitch angle.
+    //
+    // @unit Degree
+    // @resolution 0.01
+    // @range [0, 360)
+    google.protobuf.Int64Value pitch = 2 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Standard deviation of roll angle.
+    //
+    // @unit Degree
+    // @resolution 0.01
+    // @range [0, 360)
+    google.protobuf.Int64Value roll = 3 [(sensoris.protobuf.types.base.exponent) = 2];
+  }
+
+  oneof euler_quaternion {
+    // Euler angles yaw, pitch and roll in SENSORIS vehicle coordinate system.
+    Euler euler_vehicle = 1;
+
+    // Euler angles yaw, pitch and roll in relative coordinate system, the reference coordinate system is the origin of the event group.
+    Euler euler_event_group = 2;
+
+    // Quaternion in SENSORIS vehicle coordinate system.
+    Quaternion quaternion_vehicle = 3;
+
+    // Quaternion in relative coordinate system, the reference coordinate system is the origin of the event group.
+    Quaternion quaternion_event_group = 4;
+  }
+
+  oneof accuracy {
+    // Accuracy as combined standard deviation of yaw, pitch and roll angles.
+    //
+    // @unit Degree
+    // @resolution 0.01
+    // @range [0, 360)
+    google.protobuf.Int64Value combined_std_dev = 5 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Accuracy as standard deviation of yaw angle, pitch angle and roll angle.
+    StdDev std_dev = 6;
+
+    // Accuracy as 3 x 3 covariance matrix of (yaw, yaw), (yaw, pitch), (yaw, roll), (pitch, yaw), (pitch, pitch), (pitch, roll), (roll, yaw), (roll, pitch), (roll, roll) angles.
+    //
+    // @unit Degree squared
+    // @resolution 0.01
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Matrix3x3 covariance = 7 [(sensoris.protobuf.types.base.exponent) = 2];
+  }
+
+  // Proprietary extension.
+  repeated google.protobuf.Any extension = 15;
+}
+
+//
+// Rotation change.
+//
+
+// Rotation rate as change in Euler angles over time and accuracy.
+message RotationRateAndAccuracy {
+  // Accuracy as standard deviation of yaw, pitch and roll angle rate.
+  message StdDev {
+    // Standard deviation for yaw angle rate.
+    //
+    // @unit Degree per Second
+    // @resolution 0.01
+    // @range [0, )
+    google.protobuf.Int64Value yaw = 1 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Standard deviation for pitch angle rate.
+    //
+    // @unit Degree per Second
+    // @resolution 0.01
+    // @range [0, )
+    google.protobuf.Int64Value pitch = 2 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Standard deviation for roll angle rate.
+    //
+    // @unit Degree per Second
+    // @resolution 0.01
+    // @range [0, )
+    google.protobuf.Int64Value roll = 3 [(sensoris.protobuf.types.base.exponent) = 2];
+  }
+
+  // Yaw angle rate.
+  //
+  // @unit Degree per Second
+  // @resolution 0.01
+  // @range ( , )
+  sensoris.protobuf.types.base.Int64Value yaw = 1 [(sensoris.protobuf.types.base.exponent) = 2];
+
+  // Pitch angle rate.
+  //
+  // @unit Degree per Second
+  // @resolution 0.01
+  // @range ( , )
+  sensoris.protobuf.types.base.Int64Value pitch = 2 [(sensoris.protobuf.types.base.exponent) = 2];
+
+  // Roll angle rate.
+  //
+  // @unit Degree per Second
+  // @resolution 0.01
+  // @range ( , )
+  sensoris.protobuf.types.base.Int64Value roll = 3 [(sensoris.protobuf.types.base.exponent) = 2];
+
+  oneof accuracy {
+    // Accuracy as combined standard deviation of yaw, pitch and roll angle rates.
+    //
+    // @unit Degree per Second
+    // @resolution 0.01
+    // @range [0, )
+    google.protobuf.Int64Value combined_std_dev = 4 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Accuracy as standard deviation of yaw angle rate, pitch angle rate and roll angle rates.
+    StdDev std_dev = 5;
+
+    // Accuracy as 3 x 3 covariance matrix of (yaw, yaw), (yaw, pitch), (yaw, roll), (pitch, yaw), (pitch, pitch), (pitch, roll), (roll, yaw), (roll, pitch), (roll, roll) angle rates.
+    //
+    // @unit Degree squared per Second squared
+    // @resolution 0.01
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Matrix3x3 covariance = 6 [(sensoris.protobuf.types.base.exponent) = 2];
+  }
+
+  // Proprietary extension.
+  repeated google.protobuf.Any extension = 15;
+}
+
+//
+// Map location reference.
+//
+
+// Map location reference.
+message MapLocationReference {
+  // Location reference of a map object defined by a tile id, link id and offset on link id.
+  message TileIdLinkIdOffset {
+    // Map tile id.
+    //
+    // @unit 1
+    // @resolution 1
+    // @range [1, )
+    google.protobuf.Int64Value tile_id = 1;
+
+    // Map link id.
+    //
+    // @unit 1
+    // @resolution 1
+    // @range [1, )
+    google.protobuf.Int64Value link_id = 2;
+
+    // Offset of the position starting from the beginning of the link id.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range [0, )
+    google.protobuf.Int64Value offset = 3 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Proprietary extension.
+    repeated google.protobuf.Any extension = 15;
+  }
+
+  // Location reference of a map object defined by a tile id and object id.
+  message TileIdObjectId {
+    // Map tile id.
+    //
+    // @unit 1
+    // @resolution 1
+    // @range [1, )
+    google.protobuf.Int64Value tile_id = 1;
+
+    // Map object id.
+    //
+    // @unit 1
+    // @resolution 1
+    // @range [1, )
+    google.protobuf.Int64Value object_id = 2;
+
+    // Proprietary extension.
+    repeated google.protobuf.Any extension = 15;
+  }
+
+  // Absolute position of the map object.
+  sensoris.protobuf.types.spatial.PositionAndAccuracy position_and_accuracy = 1;
+
+  // Map z-level at the absolute position of the map object.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [0, )
+  google.protobuf.Int64Value z_level = 2;
+
+  oneof map_based_reference {
+    // Location reference of a map object defined by a tile id, link id and offset on link id.
+    TileIdLinkIdOffset tile_link_offset_reference = 3;
+
+    // Location reference of a map object defined by a tile id and object id.
+    TileIdObjectId map_object_id = 4;
+  }
+
+  // Proprietary extension.
+  repeated google.protobuf.Any extension = 15;
+}

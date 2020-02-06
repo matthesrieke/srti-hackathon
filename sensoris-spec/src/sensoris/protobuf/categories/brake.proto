@@ -1,0 +1,55 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.brake;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.brake";
+option java_outer_classname = "SensorisBrakeCategory";
+option java_multiple_files = true;
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+
+// Status of brake systems.
+//
+// @relation 1..* sensoris.protobuf.categories.localization.VehicleAcceleration TRIGGERED_BY 1 sensoris.protobuf.categories.brake.BrakeSystemsStatus
+// @relation 1 sensoris.protobuf.categories.brake.BrakeSystemsStatus TRIGGERED_BY 1..* sensoris.protobuf.categories.localization.VehicleAcceleration
+// @relation 1 sensoris.protobuf.categories.brake.BrakeSystemsStatus TRIGGERED_BY 1..* sensoris.protobuf.categories.objectdetection.MovableObject
+// @relation 1 sensoris.protobuf.categories.brake.BrakeSystemsStatus TRIGGERED_BY 1..* sensoris.protobuf.categories.objectdetection.StaticObject
+message BrakeSystemsStatus {
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Status of Anti-lock Breaking System (ABS).
+  sensoris.protobuf.types.base.SystemStatus abs_status = 2;
+
+  // Status of Electronic Stability Control (ESC).
+  sensoris.protobuf.types.base.SystemStatus esc_status = 3;
+
+  // Status of Traction Control System (TCS).
+  sensoris.protobuf.types.base.SystemStatus tcs_status = 4;
+
+  // Status of Electronic Brakeforce Distribution (EBD).
+  sensoris.protobuf.types.base.SystemStatus ebd_status = 5;
+
+  // Status of Emergency Brake Assist (EBA).
+  sensoris.protobuf.types.base.SystemStatus eba_status = 6;
+}
+
+// Brake category.
+message BrakeCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Status of brake systems.
+  repeated BrakeSystemsStatus brake_systems_status = 2;
+}

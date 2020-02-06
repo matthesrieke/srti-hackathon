@@ -1,0 +1,412 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.messages.data;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.messages.data";
+option java_outer_classname = "SensorisDataMessages";
+option java_multiple_files = true;
+
+// Import Google message types.
+import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+import "sensoris/protobuf/types/source.proto";
+import "sensoris/protobuf/types/spatial.proto";
+import "sensoris/protobuf/categories/localization.proto";
+import "sensoris/protobuf/categories/object_detection.proto";
+import "sensoris/protobuf/categories/weather.proto";
+import "sensoris/protobuf/categories/driving_behavior.proto";
+import "sensoris/protobuf/categories/intersection_attribution.proto";
+import "sensoris/protobuf/categories/road_attribution.proto";
+import "sensoris/protobuf/categories/traffic_regulation.proto";
+import "sensoris/protobuf/categories/traffic_events.proto";
+import "sensoris/protobuf/categories/traffic_maneuver.proto";
+import "sensoris/protobuf/categories/brake.proto";
+import "sensoris/protobuf/categories/powertrain.proto";
+import "sensoris/protobuf/categories/map.proto";
+
+//
+// Event group.
+//
+
+// Group of events with same origin.
+message EventGroup {
+  // Envelope.
+  message Envelope {
+    // Temporal and spatial origin.
+    message Origin {
+      // Temporal origin.
+      sensoris.protobuf.types.base.Timestamp timestamp = 1;
+
+      // Position and accuracy of spatial origin in absolute spatial reference system.
+      sensoris.protobuf.types.spatial.PositionAndAccuracy position_and_accuracy = 2;
+
+      // Rotation and accuracy of spatial origin in absolute spatial reference system.
+      //
+      // If orientation is not defined then orientation is East-North-Up (ENU).
+      sensoris.protobuf.types.spatial.RotationAndAccuracy orientation_and_accuracy = 3;
+    }
+
+    // Temporal and spatial origin.
+    Origin origin = 1;
+
+    // Proprietary extension.
+    repeated google.protobuf.Any extension = 15;
+  }
+
+  // Envelope.
+  Envelope envelope = 1;
+
+  // Localization category.
+  sensoris.protobuf.categories.localization.LocalizationCategory localization_category = 2;
+
+  // Object detection category.
+  sensoris.protobuf.categories.objectdetection.ObjectDetectionCategory object_detection_category = 3;
+
+  // Weather category.
+  sensoris.protobuf.categories.weather.WeatherCategory weather_category = 4;
+
+  // Driving behavior category.
+  sensoris.protobuf.categories.drivingbehavior.DrivingBehaviorCategory driving_behavior_category = 5;
+
+  // Intersection attribution category.
+  sensoris.protobuf.categories.intersectionattribution.IntersectionAttributionCategory intersection_attribution_category = 6;
+
+  // Road attribution category.
+  sensoris.protobuf.categories.roadattribution.RoadAttributionCategory road_attribution_category = 7;
+
+  // Traffic regulation category.
+  sensoris.protobuf.categories.trafficregulation.TrafficRegulationCategory traffic_regulation_category = 8;
+
+  // Traffic events category.
+  sensoris.protobuf.categories.trafficevents.TrafficEventsCategory traffic_events_category = 9;
+
+  // Traffic maneuver category.
+  sensoris.protobuf.categories.trafficmaneuver.TrafficManeuverCategory traffic_maneuver_category = 10;
+
+  // Brake category.
+  sensoris.protobuf.categories.brake.BrakeCategory brake_category = 11;
+
+  // Powertrain category.
+  sensoris.protobuf.categories.powertrain.PowertrainCategory powertrain_category = 12;
+
+  // Map category.
+  sensoris.protobuf.categories.map.MapCategory map_category = 13;
+}
+
+//
+// Data message.
+//
+
+// Data message.
+message DataMessage {
+  // Absolute paths through the message structure by defined field numbers in the protobuf schema. The paths begin at message type DataMessages.
+  message AbsolutePaths {
+    // Path through the message structure by defined field numbers in the protobuf schema. The path begins at message type DataMessages.
+    //
+    // @example [2, 2, 4, 2, 4] points to the instance of type sensoris.protobuf.types.base.Int64ValueAndAccuracy at the path data_message.event_group.weather_category.precipitation.absolute_intensity_and_accuracy.
+    message Path {
+      // Field number.
+      //
+      // @unit 1
+      // @resolution 1
+      // @range [1, )
+      repeated int64 field_number = 1;
+    }
+
+    // Path through the message structure by defined field numbers in the protobuf schema. The path begins at message type DataMessages.
+    repeated Path path = 1;
+  }
+
+  // Paths through the message structure.
+  message Paths {
+    oneof type {
+      // Absolute paths through the message structure by defined field numbers in the protobuf schema. The paths begin at message type DataMessages.
+      AbsolutePaths absolute_paths = 1;
+    }
+  }
+
+  // Envelope.
+  message Envelope {
+    // Identifiers.
+    message Ids {
+      // Session identifier.
+      google.protobuf.StringValue session_id = 1;
+
+      // Message identifier.
+      //
+      // @unit 1
+      // @resolution 1
+      // @range [1, )
+      google.protobuf.Int64Value message_id = 2;
+
+      // Flag for last message of session with the session_id.
+      //
+      // If true, then the message is the last message of the session. If false, then subsequent messages are to be expected.
+      google.protobuf.BoolValue last_message_of_session = 3;
+
+      // Vehicle fleet identifier.
+      google.protobuf.StringValue vehicle_fleet_id = 4;
+
+      // Vehicle identifier.
+      google.protobuf.StringValue vehicle_id = 5;
+
+      // Driver identifier.
+      google.protobuf.StringValue driver_id = 6;
+    }
+
+    // Override resolution of event fields referenced by their paths.
+    message FieldResolutionOverride {
+      // Paths that are impacted by the field resolution override.
+      Paths paths = 1;
+
+      // Exponent of the override to the base of 10.
+      //
+      // @unit 1
+      // @resolution 1
+      // @range ( , )
+      //
+      // @example Value 2 is interpreted as factor 10^(2) = 100, e.g. the transported value 1234 results in the interpretation of 12.34.
+      google.protobuf.Int64Value exponent = 2;
+    }
+
+    // Vehicle dimensions in reference to SENSORIS vehicle coordinate system.
+    message VehicleDimensions {
+      // Distance from SENSORIS vehicle coordinate system to vehicle front in direction of positive x-axis.
+      //
+      // @unit MilliMeter
+      // @resolution 1
+      // @range [0, )
+      google.protobuf.Int64Value distance_to_front = 1 [(sensoris.protobuf.types.base.exponent) = 0];
+
+      // Distance from SENSORIS vehicle coordinate system to vehicle back in direction of negative x-axis.
+      //
+      // @unit MilliMeter
+      // @resolution 1
+      // @range [0, )
+      google.protobuf.Int64Value distance_to_back = 2 [(sensoris.protobuf.types.base.exponent) = 0];
+
+      // Distance from SENSORIS vehicle coordinate system to vehicle left in direction of positive y-axis.
+      //
+      // @unit MilliMeter
+      // @resolution 1
+      // @range [0, )
+      google.protobuf.Int64Value distance_to_left = 3 [(sensoris.protobuf.types.base.exponent) = 0];
+
+      // Distance from SENSORIS vehicle coordinate system to vehicle right in direction of negative y-axis.
+      //
+      // @unit MilliMeter
+      // @resolution 1
+      // @range [0, )
+      google.protobuf.Int64Value distance_to_right = 4 [(sensoris.protobuf.types.base.exponent) = 0];
+
+      // Distance from SENSORIS vehicle coordinate system to vehicle top in direction of positive z-axis.
+      //
+      // @unit MilliMeter
+      // @resolution 1
+      // @range [0, )
+      google.protobuf.Int64Value distance_to_top = 5 [(sensoris.protobuf.types.base.exponent) = 0];
+
+      // Distance from SENSORIS vehicle coordinate system to vehicle ground in direction of negative z-axis.
+      //
+      // @unit MilliMeter
+      // @resolution 1
+      // @range [0, )
+      google.protobuf.Int64Value distance_to_ground = 6 [(sensoris.protobuf.types.base.exponent) = 0];
+    }
+
+    // Map identification.
+    //
+    // The combination of the map identification and event relations of type MAP_REFERENCE defined in the data message enable to relate events to map objects defined by map references in the map category. If the map of the vehicle is known to the cloud, then the relations can be interpreted by the cloud.
+    message MapIdentification {
+      // Map version defined by source and version.
+      message MapVersion {
+        // Map source.
+        //
+        // @example Value Map Provider High Definition Live Map.
+        google.protobuf.StringValue source = 1;
+
+        // Map version.
+        //
+        // In case of a continuous map update service, the exact version might not be existing.
+        sensoris.protobuf.types.base.Version version = 2;
+
+        // Map extraction timestamp representing the version of the map at the timestamp.
+        //
+        // Can be set in addition or in exchange of map version. Version and extraction timestamp are redundant in case of an exact mapping between timestamp and version.
+        sensoris.protobuf.types.base.Timestamp extraction_timestamp = 3;
+      }
+
+      // Map format.
+      enum Format {
+        // Unknown.
+        UNKNOWN_FORMAT = 0;
+        // Other, i.e. none of the listed enum values.
+        OTHER = 1;
+        // Navigation Data Standard (NDS).
+        NDS = 2;
+      }
+
+      // Map version as it is extracted from the map provider.
+      MapVersion provider_version = 1;
+
+      // Map version in case the map is compiled through a third party.
+      MapVersion compiler_version = 2;
+
+      // Map format.
+      Format format = 3;
+    }
+
+    // Identifiers.
+    Ids ids = 1;
+
+    // Field resolution override.
+    repeated FieldResolutionOverride field_resolution_override = 3;
+
+    // Vehicle dimensions in reference to SENSORIS vehicle coordinate system.
+    VehicleDimensions vehicle_dimensions = 4;
+
+    // Map identification.
+    //
+    // The combination of the map identification and event relations of type MAP_REFERENCE defined in the data message enable to relate events to map objects defined by map references in the map category. If the map of the vehicle is known to the cloud, then the relations can be interpreted by the cloud.
+    MapIdentification map_identification = 5;
+
+    // Proprietary extension.
+    repeated google.protobuf.Any extension = 15;
+  }
+
+  // Binary relation between events in a data message.
+  //
+  // Relations are allowed between events in an EventGroup and across events of different EventGroups.
+  message EventRelation {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Same real world entity described through to and from events.
+      EQUAL = 1;
+      // Accumulation of from events without to relation.
+      GROUP = 2;
+      // Accumulation of from events to whole to events.
+      CONTAIN = 3;
+      // To events add context to or enrich the from events.
+      IMPACT = 4;
+      // From events start at the to events, e.g. for spatial or temporal relations.
+      START_AT = 5;
+      // From events end at the to events, e.g. for spatial or temporal relations.
+      END_AT = 6;
+      // From events are spatially left of the to events in the context of the spatial reference system.
+      LEFT_OF = 7;
+      // From events are spatially right of the to events in the context of the spatial reference system.
+      RIGHT_OF = 8;
+      // From events are consequences of the to events.
+      TRIGGERED_BY = 9;
+      // To events are derivations or interpretations of the from events.
+      DERIVED_FROM = 11;
+      // From events reference to objects from a map.
+      MAP_REFERENCE = 12;
+    }
+
+    // From id refers to event with EventEnvelope.id.
+    //
+    // @unit 1
+    // @resolution 1
+    // @range [1, )
+    repeated google.protobuf.Int64Value from_id = 1;
+
+    // Type.
+    Type type = 2;
+
+    // To id refers to event with EventEnvelope.id.
+    //
+    // @unit 1
+    // @resolution 1
+    // @range [1, )
+    repeated google.protobuf.Int64Value to_id = 3;
+
+    // Proprietary extension.
+    repeated google.protobuf.Any extension = 15;
+  }
+
+  // Source of events.
+  //
+  // Source can be set for individual events or for event types in paths.
+  message EventSource {
+    // Event envelope ids.
+    message EventEnvelopeIds {
+      // Refers to EventEnvelope.id.
+      //
+      // @unit 1
+      // @resolution 1
+      // @range [1, )
+      //
+      // @example Values [1, 25, 26, 28, 45, 123] define that the six events identified by their ids are provided by the source.
+      repeated google.protobuf.Int64Value id = 2;
+    }
+
+    // Source.
+    sensoris.protobuf.types.source.Source source = 1;
+
+    oneof event_reference {
+      // Events referenced by their envelope ids are provided by the source.
+      EventEnvelopeIds ids = 2;
+
+      // All events of the types in the paths are provided by the source.
+      Paths paths = 3;
+    }
+
+    // Proprietary extension.
+    repeated google.protobuf.Any extension = 15;
+  }
+
+  // Envelope.
+  Envelope envelope = 1;
+
+  // Event group.
+  repeated EventGroup event_group = 2;
+
+  // Event relation.
+  repeated EventRelation event_relation = 3;
+
+  // Event source.
+  repeated EventSource event_source = 4;
+}
+
+//
+// Data messages.
+//
+
+// Data messages for transport.
+message DataMessages {
+  // Envelope.
+  message Envelope {
+    // Format version.
+    sensoris.protobuf.types.base.Version version = 1;
+
+    // Information about the submitting entity which may be a fleet, a vehicle manufacturer or a specific service/software. The primary id might be the company name whereas the secondary id might be a service reason, a bilateral contract identifier or similar.
+    //
+    // @example Values primary_id: "ABC Vehicle Manufacturer", secondary_id: "ConnectedVehicleSensorDataCollectionUnit", type: "HazardWarning".
+    repeated sensoris.protobuf.types.base.Entity submitter = 2;
+
+    // Proprietary extension.
+    repeated google.protobuf.Any extension = 15;
+  }
+
+  // Envelope.
+  Envelope envelope = 1;
+
+  // Data message.
+  repeated DataMessage data_message = 2;
+}

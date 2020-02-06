@@ -1,0 +1,44 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.map;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.map";
+option java_outer_classname = "SensorisMapCategory";
+option java_multiple_files = true;
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+import "sensoris/protobuf/types/spatial.proto";
+
+// Map reference of an event object to a map object including its location reference.
+//
+// The combination of the map identification and event relations of type MAP_REFERENCE defined in the data message enable to relate events to map objects defined by map references in the map category. If the map of the vehicle is known to the cloud, then the relations can be interpreted by the cloud.
+//
+// @relation 1 sensoris.protobuf.categories.objectdetection.StaticObject MAP_REFERENCE 1 sensoris.protobuf.categories.map.MapReference
+// @relation 1 sensoris.protobuf.categories.trafficregulation.TrafficSign MAP_REFERENCE 1 sensoris.protobuf.categories.map.MapReference
+message MapReference {
+  // Envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Location reference of the map object.
+  sensoris.protobuf.types.spatial.MapLocationReference location_reference = 2;
+}
+
+// Map category.
+message MapCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Map reference.
+  repeated MapReference map_reference = 2;
+}

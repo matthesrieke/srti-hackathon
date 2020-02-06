@@ -1,0 +1,372 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.objectdetection;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.objectdetection";
+option java_outer_classname = "SensorisObjectDetectionCategory";
+option java_multiple_files = true;
+
+// Import Google message types.
+import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+import "sensoris/protobuf/types/spatial.proto";
+
+// Detected object, which is able to move.
+//
+// Traffic signs located on a moving truck or trailer can be related to a movable object of type TRUCK or TRAILER.
+//
+// @relation 1 sensoris.protobuf.categories.objectdetection.MovableObject CONTAIN 1..* sensoris.protobuf.categories.trafficregulation.TrafficSign
+// @relation 1 sensoris.protobuf.categories.brake.BrakeSystemsStatus TRIGGERED_BY 1..* sensoris.protobuf.categories.objectdetection.MovableObject
+// @relation 1..* sensoris.protobuf.categories.objectdetection.MovableObject IMPACT 1 sensoris.protobuf.categories.trafficevents.Hazard
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.objectdetection.MovableObject
+// @relation 1 sensoris.protobuf.categories.roadattribution.Lane CONTAINS 1..* sensoris.protobuf.categories.objectdetection.MovableObject
+// @relation 1 sensoris.protobuf.categories.objectdetection.MovableObject IMPACT 1 sensoris.protobuf.categories.powertrain.CruiseControl
+message MovableObject {
+  // Type and confidence.
+  //
+  // @example Detected object is a vehicle with 80 % confidence.
+  message TypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Any vehicle, e.g. passenger car or truck.
+      VEHICLE = 1;
+      // Passenger car.
+      VEHICLE_PASSENGER_CAR = 2;
+      // Truck.
+      VEHICLE_TRUCK = 3;
+      // Bus.
+      VEHICLE_BUS = 4;
+      // Tram.
+      VEHICLE_TRAM = 5;
+      // Trailer.
+      VEHICLE_TRAILER = 6;
+      // Any two wheeler, e.g. motorcycle or bicycle.
+      TWO_WHEELER = 7;
+      // Motorcycle.
+      TWO_WHEELER_MOTORCYCLE = 8;
+      // Bicycle.
+      TWO_WHEELER_BICYCLE = 9;
+      // Person.
+      PERSON = 10;
+      // Animal.
+      ANIMAL = 11;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Movable object identifier.
+  //
+  // Identifier is unique within a DataMessage and can be used to trace movable objects.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [1, )
+  google.protobuf.Int64Value object_id = 2;
+
+  // Confidence that a movable object has been detected.
+  sensoris.protobuf.types.base.Confidence existence_confidence = 3;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 4;
+
+  // Type and confidence.
+  TypeAndConfidence type_and_confidence = 5;
+
+  // Rectangular box and accuracy.
+  sensoris.protobuf.types.spatial.RectangularBoxAndAccuracy rectangular_box_and_accuracy = 6;
+
+  // Speed.
+  //
+  // @unit Meter per Second
+  // @resolution 0.1
+  // @range [0, )
+  sensoris.protobuf.types.spatial.XyzVectorAndAccuracy speed_and_accuracy = 7 [(sensoris.protobuf.types.base.exponent) = 1];
+
+  // Acceleration.
+  //
+  // @unit Meter per Second Squared
+  // @resolution 0.1
+  // @range ( , )
+  sensoris.protobuf.types.spatial.XyzVectorAndAccuracy acceleration_and_accuracy = 8 [(sensoris.protobuf.types.base.exponent) = 1];
+}
+
+// Detected object, which is not able to move.
+//
+// Traffic signs can be related to a static object of the type POLE or SIGN_BRIDGE.
+//
+// Traffic lights can be related to static object of type TRAFFIC_LIGHT_BODY.
+//
+// @relation 1 sensoris.protobuf.categories.objectdetection.StaticObject CONTAIN 1..* sensoris.protobuf.categories.trafficregulation.TrafficSign
+// @relation 1 sensoris.protobuf.categories.objectdetection.StaticObject CONTAIN 1..* sensoris.protobuf.categories.intersectionattribution.TrafficSignal
+// @relation 1 sensoris.protobuf.categories.objectdetection.StaticObject MAP_REFERENCE 1 sensoris.protobuf.categories.map.MapReference
+// @relation 1 sensoris.protobuf.categories.brake.BrakeSystemsStatus TRIGGERED_BY 1..* sensoris.protobuf.categories.objectdetection.StaticObject
+// @relation 1..* sensoris.protobuf.categories.intersectionattribution.TrafficSignal EQUAL 1 sensoris.protobuf.categories.objectdetection.StaticObject
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.objectdetection.StaticObject
+// @relation 1 sensoris.protobuf.categories.roadattribution.Lane CONTAINS 1..* sensoris.protobuf.categories.objectdetection.StaticObject
+message StaticObject {
+  // Type and confidence.
+  //
+  // @example Detected object is a bridge with 80 % confidence.
+  message TypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Bridge.
+      BRIDGE = 1;
+      // Tunnel.
+      TUNNEL = 2;
+      // Any pole.
+      POLE = 3;
+      // Light pole.
+      POLE_LIGHT = 4;
+      // Reflector pole.
+      POLE_REFLECTOR = 5;
+      // Delineator pole.
+      POLE_DELINEATOR = 6;
+      // Gantry pole.
+      POLE_GANTRY = 7;
+      // Sign pole.
+      POLE_SIGN = 8;
+      // Guard rail pole.
+      POLE_GUARD_RAIL = 9;
+      // Bar.
+      BAR = 10;
+      // Tree.
+      TREE = 11;
+      // Bollard.
+      BOLLARD = 12;
+      // Pylon in a construction zone.
+      CONE = 13;
+      // Red/white striped element in a construction zone.
+      BARREL = 14;
+      // Wall.
+      WALL = 15;
+      // Traffic island.
+      TRAFFIC_ISLAND = 16;
+      // Speed bump.
+      SPEED_BUMP = 17;
+      // Pot hole.
+      POT_HOLE = 18;
+      // Manhole cover.
+      MANHOLE_COVER = 19;
+      // Closed manhole cover.
+      MANHOLE_COVER_CLOSED = 20;
+      // Open manhole cover.
+      MANHOLE_COVER_OPEN = 21;
+      // Sign bridge.
+      //
+      // Traffic signs can be related to the sign bridge with event relations.
+      SIGN_BRIDGE = 22;
+      // Body of a traffic light.
+      //
+      // Traffic lights can be related to the traffic light body with event relations.
+      TRAFFIC_LIGHT_BODY = 23;
+      // Parking lot barrier.
+      BARRIER_PARKING_LOT = 24;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Cone shaped circular geometry defined by a lower and upper position and a lower and upper diameter.
+  message ConeAndAccuracy {
+    // Lower position and accuracy.
+    //
+    // The lower position is closer to the ground than the upper position.
+    sensoris.protobuf.types.spatial.PositionAndAccuracy lower_position_and_accuracy = 1;
+
+    // Upper position and accuracy.
+    sensoris.protobuf.types.spatial.PositionAndAccuracy upper_position_and_accuracy = 2;
+
+    // Lower diameter and accuracy at lower position and accuracy.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range (0, )
+    sensoris.protobuf.types.base.Int64ValueAndAccuracy lower_diameter_and_accuracy = 3 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Upper diameter and accuracy at upper position and accuracy.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range (0, )
+    sensoris.protobuf.types.base.Int64ValueAndAccuracy upper_diameter_and_accuracy = 4 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Proprietary extension.
+    repeated google.protobuf.Any extension = 15;
+  }
+
+  // Surface type and confidence, e.g. of a traffic island.
+  //
+  // @example Detected object has a flat surface with 80 % confidence.
+  message SurfaceTypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Flat.
+      FLAT = 1;
+      // Rough.
+      ROUGH = 2;
+    }
+
+    // Type
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Surface material and confidence.
+  //
+  // @example Detected object has a stone surface with 80 % confidence.
+  message SurfaceMaterialAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Metal.
+      METAL = 1;
+      // Concrete.
+      CONCRETE = 2;
+      // Stone.
+      STONE = 3;
+      // Wood.
+      WOOD = 4;
+      // Plastic.
+      PLASTIC = 5;
+      // Asphalt.
+      ASPHALT = 6;
+      // Organic.
+      ORGANIC = 7;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+
+    // Reflectivity.
+    //
+    // An object is reflective if there are elements on the object, that are explicitly designed to increase visibility in low light or bad light situations.
+    //
+    // @unit 1
+    // @range [0, 100]
+    // @resolution 1
+    sensoris.protobuf.types.base.Int64ValueAndAccuracy reflectivity_and_accuracy = 3 [(sensoris.protobuf.types.base.exponent) = 0];
+  }
+
+  // Surface color and confidence.
+  message SurfaceColorAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKOWN_TYPE = 0;
+      // Other, i.e. none of the listed enum values.
+      OTHER = 1;
+      // White.
+      WHITE = 2;
+      // Gray.
+      GRAY = 3;
+      // Light gray.
+      GRAY_LIGHT = 4;
+      // Dark gray.
+      GRAY_DARK = 5;
+      // Black.
+      BLACK = 6;
+      // Red.
+      RED = 7;
+      // Green.
+      GREEN = 8;
+      // Blue.
+      BLUE = 9;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Static object identifier.
+  //
+  // Identifier is unique within a DataMessage and can be used to trace static objects.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [1, )
+  google.protobuf.Int64Value object_id = 2;
+
+  // Confidence that a static object has been detected.
+  sensoris.protobuf.types.base.Confidence existence_confidence = 3;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 4;
+
+  // Type and confidence.
+  TypeAndConfidence type_and_confidence = 5;
+
+  oneof geometry {
+    // Rectangular box and accuracy.
+    sensoris.protobuf.types.spatial.RectangularBoxAndAccuracy rectangular_box_and_accuracy = 6;
+
+    // Cone shaped circular geometry defined by a lower and upper position and a lower and upper diameter.
+    ConeAndAccuracy cone_and_accuracy = 7;
+  }
+
+  // Surface type and confidence.
+  SurfaceTypeAndConfidence surface_type_and_confidence = 8;
+
+  // Surface material and confidence.
+  SurfaceMaterialAndConfidence surface_material_and_confidence = 9;
+
+  // Surface color and confidence.
+  //
+  // An object may have multiple colors. If only one color is set, this is the dominant color.
+  repeated SurfaceColorAndConfidence surface_color_and_confidence = 10;
+}
+
+// Object detection category.
+message ObjectDetectionCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Detected object, which is able to move.
+  repeated MovableObject movable_object = 2;
+
+  // Detected object, which is not able to move.
+  repeated StaticObject static_object = 3;
+}

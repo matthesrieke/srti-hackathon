@@ -1,0 +1,166 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.powertrain;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.powertrain";
+option java_outer_classname = "SensorisPowertrainCategory";
+option java_multiple_files = true;
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+
+// Status of engine.
+message EngineStatus {
+  // Ignition status.
+  enum IgnitionStatus {
+    // Unknown.
+    UNKNOWN_IGNITION_STATUS = 0;
+    // Vehicle locked.
+    IGNITION_LOCK = 1;
+    // Ignition off.
+    IGNITION_OFF = 2;
+    // Accessories mode on.
+    IGNITION_ACCESSORIES = 3;
+    // Ignition on.
+    IGNITION_ON = 4;
+    // Ignition start.
+    IGNITION_START = 5;
+  }
+
+  // Powertrain status.
+  enum PowertrainStatus {
+    // Unknown.
+    UNKNOWN_POWERTRAIN_STATUS = 0;
+    // Powertrain is not ready.
+    POWERTRAIN_OFF = 1;
+    // Ignition is on, but powertrain is in eco mode (i.e. eco start stop functionality for a stopped vehicle).
+    POWERTRAIN_ECO_MODE = 2;
+    // Powertrain is ready to drive (i.e. combustion engine running or hybrid/electric ready to drive).
+    POWERTRAIN_READY = 3;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Ingnition status.
+  IgnitionStatus ignition_status = 2;
+
+  // Powertrain status.
+  PowertrainStatus powertrain_status = 3;
+
+}
+
+// Status of transmission.
+message TransmissionStatus {
+  // Gear mode.
+  enum GearMode {
+    // Unknown.
+    UNKNOWN_GEAR_MODE = 0;
+    // Automatic gear (drive).
+    DRIVE = 1;
+    // Manual gear.
+    MANUAL = 2;
+    // Reverse gear.
+    REVERSE = 3;
+    // Park.
+    PARK = 4;
+    // Neutral.
+    NEUTRAL = 5;
+  }
+
+  // Drive mode.
+  enum DriveMode {
+    // Unknown.
+    UNKNOWN_DRIVE_MODE = 0;
+    // Eco drive mode.
+    ECO = 1;
+    // Normal or comfort mode.
+    COMFORT = 2;
+    // Sport mode.
+    SPORT = 3;
+    // Super sport mode.
+    SUPER_SPORT = 4;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Mode of gear.
+  GearMode gear_mode = 2;
+
+  // Drive mode.
+  DriveMode drive_mode = 3;
+
+  // Current gear in the selected mode for which 1 is the gear with the highest ratio (slowest possible speed) and the maximum number (e.g. 6) is the gear with the lowest ratio (highest possible speed).
+  //
+  // If gear mode is REVERSE, then current gear refers to the gear in reverse as vehicles might have multiple reverse gears.
+  // If gear mode is PARK or NEUTRAL, the current gear is not relevant.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [1, )
+  sensoris.protobuf.types.base.Int64Value current_gear = 4;
+}
+
+// Status of the longitudinal driver assistent system for keeping the selected speed and/or temporal distance towards the lead vehicle.
+//
+// @relation 1 sensoris.protobuf.categories.objectdetection.MovableObject IMPACT 1 sensoris.protobuf.categories.powertrain.CruiseControl
+message CruiseControlStatus {
+  // Type.
+  enum Type {
+    // Unknown.
+    UNKNOWN_TYPE = 0;
+    // Cruise control.
+    SPEED = 1;
+    // Adaptive cruise control.
+    SPEED_AND_DISTANCE = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Type.
+  Type type = 2;
+
+  // Status.
+  sensoris.protobuf.types.base.SystemStatus status = 3;
+
+  // Selected speed.
+  //
+  // @unit Meter per Second
+  // @resolution 0.1
+  // @range (0, )
+  sensoris.protobuf.types.base.Int64Value selected_speed = 4 [(sensoris.protobuf.types.base.exponent) = 1];
+
+  // Selected lead time.
+  //
+  // @unit Second
+  // @resolution 0.1
+  // @range [0, 100]
+  sensoris.protobuf.types.base.Int64Value selected_time_to_lead_vehicle = 5 [(sensoris.protobuf.types.base.exponent) = 1];
+}
+
+// Powertrain category.
+message PowertrainCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Status of engine.
+  repeated EngineStatus engine_status = 2;
+
+  // Status of transmission.
+  repeated TransmissionStatus transmission_status = 3;
+
+  // Status of cruise control.
+  repeated CruiseControlStatus cruise_control_status = 4;
+}

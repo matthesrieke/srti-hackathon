@@ -1,0 +1,1037 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.trafficregulation;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.trafficregulation";
+option java_outer_classname = "SensorisTrafficRegulationCategory";
+option java_multiple_files = true;
+
+// Import Google message types.
+import "google/protobuf/wrappers.proto";
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+import "sensoris/protobuf/types/spatial.proto";
+
+// TrafficSign.
+//
+// A TrafficSign includes the subcategories traffic signs, rectangular signboards, and advertisement signs.
+//
+// @relation 1 sensoris.protobuf.categories.trafficregulation.TrafficSign CONTAIN 1..* sensoris.protobuf.categories.trafficregulation.TrafficSign
+// @relation 1..* sensoris.protobuf.categories.trafficregulation.TrafficSign GROUP
+// @relation 1..* sensoris.protobuf.categories.trafficregulation.TrafficSign IMPACT 1 sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1..* sensoris.protobuf.categories.objectdetection CONTAIN 1 sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1 sensoris.protobuf.categories.trafficregulation.TrafficSign MAP_REFERENCE 1 sensoris.protobuf.categories.map.MapReference
+// @relation 1..* sensoris.protobuf.categories.trafficregulation.TrafficSign IMPACT 1 sensoris.protobuf.categories.drivingbehavior.ParkingStatus
+// @relation 1 sensoris.protobuf.categories.objectdetection.MovableObject CONTAIN 1..* sensoris.protobuf.categories.trafficregulation.TrafficSign
+// @relation 1 sensoris.protobuf.categories.objectdetection.StaticObject CONTAIN 1..* sensoris.protobuf.categories.trafficregulation.TrafficSign
+// @relation 1 sensoris.protobuf.categories.roadattribution.SurfaceMarking EQUAL 1 sensoris.protobuf.categories.trafficregulation.TrafficSign
+// @relation 1..* sensoris.protobuf.categories.trafficregulation.TrafficSign IMPACT 1 sensoris.protobuf.categories.trafficevents.RoadWorks
+message TrafficSign {
+  // Shape and confidence.
+  message ShapeAndConfidence {
+    // Type of the traffic sign shape.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Other, i.e. none of the listed enum values.
+      OTHER = 1;
+      // Rectangle.
+      RECTANGLE = 2;
+      // Square.
+      SQUARE = 3;
+      // Triangle pointing up.
+      TRIANGLE_UP = 4;
+      // Triangle pointing down.
+      TRIANGLE_DOWN = 5;
+      // Diamond.
+      DIAMOND = 6;
+      // Hexagon.
+      HEXAGON = 7;
+      // Round.
+      ROUND = 8;
+      // Crossbuck, e.g. at railway crossings.
+      CROSS_BUCK = 9;
+      // Octagon.
+      OCTAGON = 10;
+      // Ellipse.
+      ELLIPSE = 11;
+      // Pentagon.
+      PENTAGON = 12;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Type and confidence.
+  message TypeAndConfidence {
+    // Type of the traffic sign face.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Other, i.e. none of the listed enum values. The type, if known by the sensor, may be provided as string in the field other_text.
+      OTHER_AS_TEXT = 1;
+      // The specific speed limit value may be provided in the field value_and_confidence.
+      // @img SPEED_LIMIT_de1.png @img SPEED_LIMIT_us1.png
+      SPEED_LIMIT = 2;
+      // The specific speed limit value may be provided in the field value_and_confidence.
+      // @img SPEED_LIMIT_END_de1.png @img SPEED_LIMIT_END_us1.png
+      SPEED_LIMIT_END = 3;
+      // @img SPEED_LIMIT_CHANGE_UPCOMING_us1.png
+      SPEED_LIMIT_CHANGE_UPCOMING = 4;
+      // The specific speed limit value may be provided in the field value_and_confidence.
+      // @img ADVISORY_SPEED_LIMIT_de1.png
+      ADVISORY_SPEED_LIMIT = 5;
+      // The specific speed limit value may be provided in the field value_and_confidence.
+      // @img ADVISORY_SPEED_LIMIT_END_de1.png
+      ADVISORY_SPEED_LIMIT_END = 6;
+      // @img NO_OVERTAKING_de1.png
+      NO_OVERTAKING = 7;
+      // @img NO_OVERTAKING_END_de1.png
+      NO_OVERTAKING_END = 8;
+      // If direction cannot be provided by sensor.
+      PROTECTED_PASSING_START = 9;
+      PROTECTED_PASSING_END = 10;
+      // @img PROTECTED_PASSING_LEFT_START_de1.png
+      PROTECTED_PASSING_LEFT_START = 11;
+      // @img PROTECTED_PASSING_RIGHT_START_de1.png
+      PROTECTED_PASSING_RIGHT_START = 12;
+      PROTECTED_PASSING_LEFT_END = 13;
+      // @img PROTECTED_PASSING_RIGHT_END_de1.png
+      PROTECTED_PASSING_RIGHT_END = 14;
+      // @img NO_OVERTAKING_TRUCK_de1.png
+      NO_OVERTAKING_TRUCK = 15;
+      // @img NO_OVERTAKING_TRUCK_END_de1.png
+      NO_OVERTAKING_TRUCK_END = 16;
+      // @img ALL_RESTRICTIONS_END_de1.png
+      ALL_RESTRICTIONS_END = 17;
+      // @img CITY_START_de1.png
+      CITY_START = 18;
+      // @img CITY_END_de1.png
+      CITY_END = 19;
+      // Highway is a major road (e.g. US Highway, German Bundesstrasse).
+      // @img HIGHWAY_de1.png
+      HIGHWAY = 20;
+      // @img HIGHWAY_END_de1.png
+      HIGHWAY_END = 21;
+      // These roads are Class-A roads connecting cities or states (e.g. US Interstate, European E-road or German Autobahn) and in many countries have the rule of limited access.
+      // @img MOTORWAY_de1.png
+      MOTORWAY = 22;
+      // @img MOTORWAY_END_de1.png
+      MOTORWAY_END = 23;
+      // @img CONSTRUCTION_de1.png @img CONSTRUCTION_us1.png
+      CONSTRUCTION = 24;
+      // @img CONSTRUCTION_END_us1.png
+      CONSTRUCTION_END = 25;
+      // If direction cannot be provided by sensor.
+      LANE_MERGE = 26;
+      // A lane right merge can also be described as a lane ending on the right side.
+      // @img LANE_MERGE_ON_RIGHT_us1.png
+      LANE_MERGE_ON_RIGHT = 27;
+      // A lane left merge can also be described as a lane ending on the left side.
+      // @img LANE_MERGE_ON_LEFT_us1.png
+      LANE_MERGE_ON_LEFT = 28;
+      // A lane merge center can also be described as a lane ending on both sides left and right.
+      // @img LANE_MERGE_CENTER_de1.png
+      LANE_MERGE_CENTER = 29;
+      // @img RAILWAY_CROSSING_GENERAL_de1.png @img RAILWAY_CROSSING_GENERAL_us1.png
+      RAILWAY_CROSSING_GENERAL = 30;
+      // @img RAILWAY_CROSSING_PROTECTED_de1.png
+      RAILWAY_CROSSING_PROTECTED = 31;
+      // @img RAILWAY_CROSSING_UNPROTECTED_de1.png
+      RAILWAY_CROSSING_UNPROTECTED = 32;
+      // If direction cannot be provided by sensor.
+      ROAD_NARROWS = 33;
+      // @img ROAD_NARROWS_LEFT_de1.png
+      ROAD_NARROWS_LEFT = 34;
+      // @img ROAD_NARROWS_RIGHT_de1.png
+      ROAD_NARROWS_RIGHT = 35;
+      // @img ROAD_NARROWS_CENTER_de1.png
+      ROAD_NARROWS_CENTER = 36;
+      // If direction cannot be provided by sensor.
+      SHARP_CURVE = 37;
+      // @img SHARP_CURVE_LEFT_de1.png @img SHARP_CURVE_LEFT_us1.png
+      SHARP_CURVE_LEFT = 38;
+      // @img SHARP_CURVE_RIGHT_de1.png @img SHARP_CURVE_RIGHT_us1.png
+      SHARP_CURVE_RIGHT = 39;
+      WINDING_ROAD = 40;
+      // @img WINDING_ROAD_STARTING_LEFT_us1.png
+      WINDING_ROAD_STARTING_LEFT = 41;
+      // @img WINDING_ROAD_STARTING_RIGHT_us1.png
+      WINDING_ROAD_STARTING_RIGHT = 42;
+      // @img STEEP_HILL_us1.png
+      STEEP_HILL = 43;
+      // The percentage of the slope may be provided in the field value_and_confidence. The format is to be provided in "xx %" defining the percent of inclination per 100 meter.
+      // @img STEEP_HILL_UPWARDS_de1.png
+      STEEP_HILL_UPWARDS = 44;
+      // The percentage of the slope may be provided in the field value_and_confidence. The format is to be provided in "xx %" defining the percent of declination per 100 meter.
+      // @img STEEP_HILL_DOWNWARDS_de1.png
+      STEEP_HILL_DOWNWARDS = 45;
+      // @img STOP_SIGN_de1.png
+      STOP_SIGN = 46;
+      // If direction cannot be provided by sensor.
+      LATERAL_WIND = 47;
+      // @img LATERAL_WIND_FROM_RIGHT_de1.png
+      LATERAL_WIND_FROM_RIGHT = 48;
+      // @img LATERAL_WIND_FROM_LEFT_de1.png
+      LATERAL_WIND_FROM_LEFT = 49;
+      // If information about the text of the warning is available, it may be provided in the field value_and_confidence.
+      // @img GENERAL_WARNING_de1.png
+      GENERAL_WARNING = 50;
+      // @img RISK_OF_GROUNDING_de1.png
+      RISK_OF_GROUNDING = 51;
+      // @img ANIMAL_de1.png
+      ANIMAL = 52;
+      // @img ICY_CONDITIONS_de1.png
+      ICY_CONDITIONS = 53;
+      // @img SLIPPERY_ROAD_de1.png @img SLIPPERY_ROAD_us1.png
+      SLIPPERY_ROAD = 54;
+      // @img UNEVEN_ROAD_de1.png
+      UNEVEN_ROAD = 55;
+      // @img SCHOOL_ZONE_us1.png
+      SCHOOL_ZONE = 56;
+      // @img TRAMWAY_CROSSING_us1.png
+      TRAMWAY_CROSSING = 57;
+      // @img CONGESTION_HAZARD_de1.png
+      CONGESTION_HAZARD = 58;
+      // @img ACCIDENT_HAZARD_de1.png @img ACCIDENT_HAZARD_us1.png
+      ACCIDENT_HAZARD = 59;
+      // @img BICYCLE_CROSSING_us1.png
+      BICYCLE_CROSSING = 60;
+      // @img PRIORITY_OVER_ONCOMING_TRAFFIC_de1.png
+      PRIORITY_OVER_ONCOMING_TRAFFIC = 61;
+      // @img YIELD_de1.png
+      YIELD = 62;
+      // @img PRIORITY_ROAD_de1.png
+      PRIORITY_ROAD = 63;
+      // @img PRIORITY_ROAD_END_de1.png
+      PRIORITY_ROAD_END = 64;
+      // @img TRAFFIC_CALMING_de1.png
+      TRAFFIC_CALMING = 65;
+      // @img TRAFFIC_CALMING_END_de1.png
+      TRAFFIC_CALMING_END = 66;
+      // Further specification of the sign, e.g. green zone in Germany, may be provided in the field value_and_confidence.
+      // @img ENVIRONMENTAL_AREA_de1.png
+      ENVIRONMENTAL_AREA = 67;
+      // @img ENVIRONMENTAL_AREA_END_de1.png
+      ENVIRONMENTAL_AREA_END = 68;
+      // @img INTERSECTION_de1.png
+      INTERSECTION = 69;
+      // @img ROUNDABOUT_de1.png
+      ROUNDABOUT = 70;
+      // @img PASSING_ON_LEFT_de1.png @img PASSING_ON_LEFT_us1.png
+      PASSING_ON_LEFT = 71;
+      // @img PASSING_ON_RIGHT_de1.png @img PASSING_ON_RIGHT_us1.png
+      PASSING_ON_RIGHT = 72;
+      // @img PASSING_ON_LEFT_OR_RIGHT_us1.png @img PASSING_ON_LEFT_OR_RIGHT_us2.png
+      PASSING_ON_LEFT_OR_RIGHT = 73;
+      // @img MANDATORY_TURN_RIGHT_ONLY_de1.png @img MANDATORY_TURN_RIGHT_ONLY_us1.png
+      MANDATORY_TURN_RIGHT_ONLY = 74;
+      // @img MANDATORY_TURN_LEFT_ONLY_de1.png @img MANDATORY_TURN_LEFT_ONLY_us1.png
+      MANDATORY_TURN_LEFT_ONLY = 75;
+      // @img MANDATORY_STRAIGHT_ONLY_de1.png @img MANDATORY_STRAIGHT_ONLY_us1.png
+      MANDATORY_STRAIGHT_ONLY = 76;
+      // @img TURN_LEFT_OR_RIGHT_de1.png
+      MANDATORY_TURN_LEFT_OR_RIGHT = 77;
+      // If sensor is not aware of left or right restriction.
+      MANDATORY_TURN_RESTRICTION = 78;
+      // @img MANDATORY_STRAIGHT_OR_LEFT_de1.png
+      MANDATORY_STRAIGHT_OR_LEFT = 79;
+      // @img MANDATORY_STRAIGHT_OR_RIGHT_de1.png
+      MANDATORY_STRAIGHT_OR_RIGHT = 80;
+      // @img NO_LEFT_TURN_us1.png
+      NO_LEFT_TURN = 81;
+      // @img NO_RIGHT_TURN_us1.png
+      NO_RIGHT_TURN = 82;
+      // @img NO_U_TURN_de1.png @img NO_U_TURN_us1.png
+      NO_U_TURN = 83;
+      // @img NO_U_OR_LEFT_TURN_us1.png
+      NO_U_OR_LEFT_TURN = 84;
+      // @img U_TURN_ALLOWED_us1.jpg
+      U_TURN_ALLOWED = 85;
+      // This type is valid for trucks and other transportation vehicles.
+      // @img MANDATORY_LEFT_TRUCK_de1.png
+      MANDATORY_LEFT_TRUCK = 86;
+      // This type is valid for trucks and other transportation vehicles.
+      // @img MANDATORY_RIGHT_TRUCK_de1.png
+      MANDATORY_RIGHT_TRUCK = 87;
+      // This type is valid for trucks and other transportation vehicles.
+      // @img MANDATORY_STRAIGHT_TRUCK_de1.png
+      MANDATORY_STRAIGHT_TRUCK = 88;
+      // @img NO_ENTRY_de1.png @img NO_ENTRY_us1.png
+      NO_ENTRY = 89;
+      // @img DEAD_END_de1.png @img DEAD_END_us1.png
+      DEAD_END = 90;
+      // @img HIGH_OCCUPANCY_VEHICLE_LANE_us1.png
+      HIGH_OCCUPANCY_VEHICLE_LANE = 91;
+      // @img TOLL_de1.png
+      TOLL = 92;
+      TOLL_CAR = 93;
+      // @img TOLL_LANE_us1.jpg
+      TOLL_LANE = 94;
+      // @img EXPRESS_LANE_us1.jpg
+      EXPRESS_LANE = 95;
+      // @img SHOULDER_OPEN_FOR_TRAFFIC_de1.png
+      SHOULDER_OPEN_FOR_TRAFFIC = 96;
+      // @img SHOULDER_CLOSED_FOR_TRAFFIC_de1.png
+      SHOULDER_CLOSED_FOR_TRAFFIC = 97;
+      // @img LANE_CLOSED_us1.jpg
+      LANE_CLOSED = 98;
+      // @img LANE_CLOSED_RIGHT_MOST_LANE_us1.png
+      LANE_CLOSED_RIGHT_MOST_LANE = 99;
+      LANE_CLOSED_LEFT_MOST_LANE = 100;
+      // @img WARNING_PEDESTRIAN_de1.png @img WARNING_PEDESTRIAN_us1.png
+      WARNING_PEDESTRIAN = 101;
+      // @img WARNING_CHILDREN_de1.png
+      WARNING_CHILDREN = 102;
+      // @img WARNING_BICYCLE_de1.png
+      WARNING_BICYCLE = 103;
+      // @img WARNING_BUS_de1.png
+      WARNING_BUS = 104;
+      // @img PUBLIC_TRANSPORTATION_STOP_de1.png
+      PUBLIC_TRANSPORTATION_STOP = 105;
+      // Directly at the sign, not the "warning of crossing ahead".
+      // @img PEDESTRIAN_CROSSING_de1.png
+      PEDESTRIAN_CROSSING = 106;
+      // The weight limitation may be provided in the field value_and_confidence. The format is to be provided in "xx t" defining the weight in xx tons or "xxxxxx lbs" defining the weight in x pounds.
+      // @img WEIGHT_RESTRICTION_de1.png
+      WEIGHT_RESTRICTION = 107;
+      // The height limitation, e.g. when driving under a bridge, may be provided in the field value_and_confidence. The format is to be provided in "xx.x m" defining the height in xx.x meter or "xx f yy in" defining the height in xx foot and yy inches.
+      // @img HEIGHT_RESTRICTION_de1.png
+      HEIGHT_RESTRICTION = 108;
+      // The length limitation may be provided in the field value_and_confidence. The format is to be provided in "xx.x m" defining the length in xx.x meter or "xx f yy in" defining the height in xx foot and yy inches.
+      // @img LENGTH_RESTRICTION_de1.png
+      LENGTH_RESTRICTION = 109;
+      // The width limitation may be provided in the field value_and_confidence. The format is to be provided in "xx.x m" defining the width in xx.x meter or "xx f yy in" defining the height in xx foot and yy inches.
+      // @img WIDTH_RESTRICTION_de1.png
+      WIDTH_RESTRICTION = 110;
+      // @img WARNING_TRUCK_ROLLOVER_us1.png @img WARNING_TRUCK_ROLLOVER_us2.png
+      WARNING_TRUCK_ROLLOVER = 111;
+      // @img SIGNAL_AHEAD_de1.png @img SIGNAL_AHEAD_us1.png
+      SIGNAL_AHEAD = 112;
+      // @img SKI_CROSSING_us1.jpg
+      SKI_CROSSING = 113;
+      // @img NO_AGRICULTUR_VEHICLE_de1.png @img NO_AGRICULTUR_VEHICLE_us1.png
+      NO_AGRICULTUR_VEHICLE = 114;
+      // @img NO_BICYCLE_de1.png
+      NO_BICYCLE = 115;
+      // @img NO_BUS_de1.png
+      NO_BUS = 116;
+      NO_HAUL_EXPLOSIVES = 117;
+      NO_HAUL_HARMFUL_TO_WATER = 118;
+      // @img NO_HAUL_HAZARDOUS_MATERIAL_de1.png
+      NO_HAUL_HAZARDOUS_MATERIAL = 119;
+      // @img NO_MOTORCYCLE_de1.png
+      NO_MOTORCYCLE = 120;
+      // @img NO_TRAILER_de1.png
+      NO_TRAILER = 121;
+      // @img NO_TRUCK_WITH_TRAILER_de1.png
+      NO_TRUCK_WITH_TRAILER = 122;
+      // @img PARK_AND_RIDE_de1.png
+      PARK_AND_RIDE = 123;
+      // These signs are typical mounted on a periodical distance. The distance value itself may be provided in the field value_and_confidence. The format is to be provided in "xxx.x" defining the distance offset value in xxx.x, which is to be used without units to represent both kilometer and miles.
+      // @img ROAD_DISTANCE_de1.jpg
+      ROAD_DISTANCE = 124;
+      // @img EMERGENCY_PHONE_de1.png
+      EMERGENCY_PHONE = 125;
+      // @img SPEED_LIMIT_ENFORCEMENT_de1.png
+      SPEED_LIMIT_ENFORCEMENT = 126;
+      // @img TRAFFIC_LIGHT_ENFORCEMENT_us1.png
+      TRAFFIC_LIGHT_ENFORCEMENT = 127;
+      // Sign board showing direction or distance to a city, location or exit.
+      // @img BOARD_DIRECTION_de1.png
+      BOARD_DIRECTION = 128;
+      // Street name - street name text provided on sign can be specified in value_and_confidence.
+      // @img STREET_NAME_us1.png
+      STREET_NAME = 129;
+      // Speed limit only valid for trucks. The specific speed limit value may be provided in the field value_and_confidence. However, speed limit start and supplementary sign TRUCK should be preferred if two signs are mounted on sign post.
+      // @img TRUCK_SPEED_LIMIT_us1.png
+      TRUCK_SPEED_LIMIT = 130;
+      // Speed limit only valid for trucks. The specific speed limit value may be provided in the field value_and_confidence. However, speed limit start and supplementary sign TRUCK should be preferred if two signs are mounted on sign post.
+      TRUCK_SPEED_LIMIT_END = 131;
+      // Speed limit only valid at night. The specific speed limit value may be provided in the field value_and_confidence. However, speed limit start and supplementary type NIGHT should be preferred if two signs are mounted on sign post.
+      // @img SPEED_LIMIT_NIGHT_us1.png
+      SPEED_LIMIT_NIGHT = 132;
+      // Speed limit only valid at night. The specific speed limit value may be provided in the field value_and_confidence. However, speed limit start and supplementary type NIGHT should be preferred if two signs are mounted on sign post.
+      SPEED_LIMIT_NIGHT_END = 133;
+      // @img MINIMUM_SPEED_de1.png @img MINIMUM_SPEED_us1.png
+      MINIMUM_SPEED = 134;
+      // @img MINIMUM_SPEED_END_de1.png
+      MINIMUM_SPEED_END = 135;
+      // @img PEDESTRIAN_ZONE_de1.png
+      PEDESTRIAN_ZONE = 136;
+      // @img PEDESTRIAN_ZONE_END_de1.png
+      PEDESTRIAN_ZONE_END = 137;
+      // @img PEDESTRIAN_PATH_de1.png
+      PEDESTRIAN_PATH = 138;
+      PEDESTRIAN_PATH_END = 139;
+      // @img PEDESTRIAN_BICYCLE_PATH_de1.png
+      PEDESTRIAN_BICYCLE_PATH = 140;
+      PEDESTRIAN_BICYCLE_PATH_END = 141;
+      // @img BICYCLE_PATH_de1.png
+      BICYCLE_PATH = 142;
+      BICYCLE_PATH_END = 143;
+      // @img BICYCLE_STREET_de1.png
+      BICYCLE_STREET = 144;
+      BICYCLE_STREET_END = 145;
+      // @img CURVE_LEFT_THEN_RIGHT_de1.png @img CURVE_LEFT_THEN_RIGHT_us1.png
+      CURVE_LEFT_THEN_RIGHT = 146;
+      // @img CURVE_RIGHT_THEN_LEFT_de1.png @img CURVE_RIGHT_THEN_LEFT_us1.png
+      CURVE_RIGHT_THEN_LEFT = 147;
+      // @img CURVE_TRIPLE_HAIRPIN_cn1.png
+      CURVE_TRIPLE_HAIRPIN = 148;
+      STEEP_DROP = 149;
+      // @img STEEP_DROP_ON_LEFT_cn1.png
+      STEEP_DROP_ON_LEFT = 150;
+      // @img STEEP_DROP_ON_RIGHT_cn1.png
+      STEEP_DROP_ON_RIGHT = 151;
+      // @img NO_ANIMAL_CATTLE_de1.png
+      NO_ANIMAL_CATTLE = 152;
+      ANIMAL_DEER = 153;
+      ANIMAL_MOOSE = 154;
+      // @img NO_HORSE_RIDING_de1.png
+      NO_HORSE_RIDING = 155;
+      // @img FALLING_ROCKS_us1.png
+      FALLING_ROCKS = 156;
+      // @img FALLING_ROCKS_LEFT_us1.png
+      FALLING_ROCKS_LEFT = 157;
+      // @img FALLING_ROCKS_RIGHT_de1.png
+      FALLING_ROCKS_RIGHT = 158;
+      // @img YIELD_TO_ONCOMING_TRAFFIC_de1.png
+      YIELD_TO_ONCOMING_TRAFFIC = 159;
+      // @img UNPROTECTED_LEFT_TURN_us1.png
+      UNPROTECTED_LEFT_TURN = 160;
+      // If sensor is not aware of left or right restriction.
+      ONEWAY_TRAFFIC = 161;
+      // @img ONEWAY_TRAFFIC_TO_LEFT_de1.png @img ONEWAY_TRAFFIC_TO_LEFT_us1.png
+      ONEWAY_TRAFFIC_TO_LEFT = 162;
+      // @img ONEWAY_TRAFFIC_TO_RIGHT_de1.png
+      ONEWAY_TRAFFIC_TO_RIGHT = 163;
+      // @img ONEWAY_TRAFFIC_TO_STRAIGHT_de1.png
+      ONEWAY_TRAFFIC_TO_STRAIGHT = 164;
+      // @img NO_VEHICLE_de1.png
+      NO_VEHICLE = 165;
+      // @img NO_MOTOR_VEHICLE_de1.png
+      NO_MOTOR_VEHICLE = 166;
+      // @img NO_TRUCK_de1.png
+      NO_TRUCK = 167;
+      // @img NO_PEDESTRIAN_de1.png @img NO_PEDESTRIAN_de2.png
+      NO_PEDESTRIAN = 168;
+      // @img LANE_USED_IN_BOTH_DIRECTIONS_us1.png
+      LANE_USED_IN_BOTH_DIRECTIONS = 169;
+      // @img FOG_AREA_us1.png
+      FOG_AREA = 170;
+      // @img TIRE_CHAINS_MANDATORY_de1.png
+      TIRE_CHAINS_MANDATORY = 171;
+      // @img HIJACKING_HOTSPOT_us1.png
+      HIJACKING_HOTSPOT = 172;
+      OVERPASS_AHEAD = 173;
+      // @img TUNNEL_de1.png @img TUNNEL_us1.png
+      TUNNEL = 174;
+      // @img FERRY_TERMINAL_us1.png
+      FERRY_TERMINAL = 175;
+      // @img NARROW_BRIDGE_us1.png
+      NARROW_BRIDGE = 176;
+      // @img NO_IDLING_de1.png @img NO_IDLING_us1.png
+      NO_IDLING = 177;
+      // @img HUMPBACK_BRIDGE_us1.png
+      HUMPBACK_BRIDGE = 178;
+      // If sensor is not aware of left or right restriction.
+      EMBANKMENT = 179;
+      // @img EMBANKMENT_ON_THE_LEFT_us1.png
+      EMBANKMENT_ON_THE_LEFT = 180;
+      // @img EMBANKMENT_ON_THE_RIGHT_de1.png
+      EMBANKMENT_ON_THE_RIGHT = 181;
+      // @img CROSSING_WITH_PRIORITY_OVER_MINOR_ROAD_de1.png
+      CROSSING_WITH_PRIORITY_OVER_MINOR_ROAD = 182;
+      // @img CROSSING_WITH_PRIORITY_TO_THE_RIGHT_us1.png
+      CROSSING_WITH_PRIORITY_TO_THE_RIGHT = 183;
+      // @img BRANCH_TO_THE_LEFT_de1.png
+      BRANCH_TO_THE_LEFT = 184;
+      // @img BRANCH_TO_THE_RIGHT_de1.png
+      BRANCH_TO_THE_RIGHT = 185;
+      // @img TWO_WAY_TRAFFIC_de1.png @img TWO_WAY_TRAFFIC_us1.png
+      TWO_WAY_TRAFFIC = 186;
+      // @img BUMP_us1.png
+      BUMP = 187;
+      // @img DIP_us1.png
+      DIP = 188;
+      // @img ROAD_FLOODED_us1.png
+      ROAD_FLOODED = 189;
+      // @img AUDIBLE_WARNING_us1.png
+      AUDIBLE_WARNING = 190;
+      // @img VILLAGE_AHEAD_us1.png
+      VILLAGE_AHEAD = 191;
+      // @img MOVABLE_BRIDGE_de1.png
+      MOVABLE_BRIDGE = 192;
+      // @img SLOW_DOWN_us1.png
+      SLOW_DOWN = 193;
+      // If sensor is not aware of left or right restriction.
+      INTERSECTION_T = 194;
+      INTERSECTION_T_LEFT = 195;
+      // @img INTERSECTION_T_RIGHT_us1.png
+      INTERSECTION_T_RIGHT = 196;
+      // @img INTERSECTION_T_LEFT_RIGHT_us1.png
+      INTERSECTION_T_LEFT_RIGHT = 197;
+      // @img INTERSECTION_Y_de1.png
+      INTERSECTION_Y = 198;
+      // @img USE_LOW_GEAR_us1.png
+      USE_LOW_GEAR = 199;
+      // @img USE_LOW_GEAR_END_us1.png
+      USE_LOW_GEAR_END = 200;
+      // @img NO_COMPRESSION_BRAKING_us1.png
+      NO_COMPRESSION_BRAKING = 201;
+      // @img NO_COMPRESSION_BRAKING_END_us1.png
+      NO_COMPRESSION_BRAKING_END = 202;
+      // @img WAITING_LINE_us1.png
+      WAITING_LINE = 203;
+      // @img DONT_STOP_ZONE_us1.png
+      DONT_STOP_ZONE = 204;
+      // @img HONKING_PROHIBITED_us1.png
+      HONKING_PROHIBITED = 205;
+      // @img FASTEN_SEAT_BELT_us1.png
+      FASTEN_SEAT_BELT = 206;
+      // @img HAMLET_ENTRY_de1.png
+      HAMLET_ENTRY = 207;
+      // @img HAMLET_EXIT_de1.png
+      HAMLET_EXIT = 208;
+      // @img HIGHWAY_MARKER_1_STRIPE_de1.png
+      HIGHWAY_MARKER_1_STRIPE = 209;
+      // @img HIGHWAY_MARKER_2_STRIPES_de1.png
+      HIGHWAY_MARKER_2_STRIPES = 210;
+      // @img HIGHWAY_MARKER_3_STRIPES_de1.png
+      HIGHWAY_MARKER_3_STRIPES = 211;
+      // @img GUIDING_BEACON_de1.png
+      GUIDING_BEACON = 212;
+      // @img COUNTDOWN_MARKER_1_STRIPE_de1.png
+      COUNTDOWN_MARKER_1_STRIPE = 213;
+      // @img COUNTDOWN_MARKER_2_STRIPES_de1.png
+      COUNTDOWN_MARKER_2_STRIPES = 214;
+      // @img COUNTDOWN_MARKER_3_STRIPES_de1.png
+      COUNTDOWN_MARKER_3_STRIPES = 215;
+      // @img DIVERSION_ROUTE_de1.png
+      DIVERSION_ROUTE = 216;
+      // @img DIVERSION_ROUTE_END_de1.png
+      DIVERSION_ROUTE_END = 217;
+      // @img NO_STOPPING_EXCEPT_TAXI_de1.png
+      NO_STOPPING_EXCEPT_TAXI = 218;
+      // @img NO_STOPPING_de1.png
+      NO_STOPPING = 219;
+      NO_STOPPING_LEFT = 220;
+      NO_STOPPING_RIGHT = 221;
+      // @img NO_STOPPING_LEFT_AND_RIGHT_de1.png
+      NO_STOPPING_LEFT_AND_RIGHT = 222;
+      // If sensor is not aware of left or right restriction, or was not present on sign.
+      // @img NO_PARKING_de1.png
+      NO_PARKING = 223;
+      // @img NO_PARKING_LEFT_de1.png
+      NO_PARKING_LEFT = 224;
+      // @img NO_PARKING_RIGHT_de1.png
+      NO_PARKING_RIGHT = 225;
+      // @img NO_PARKING_LEFT_AND_RIGHT_de1.png
+      NO_PARKING_LEFT_AND_RIGHT = 226;
+      // @img RUNNAWAY_TRUCK_RAMP_us1.png
+      RUNNAWAY_TRUCK_RAMP = 227;
+      // @img TURN_ON_GREEN_de1.png
+      TURN_ON_GREEN = 228;
+      // @img NO_TURN_ON_RED_us1.jpg
+      NO_TURN_ON_RED = 229;
+      // @img MOTORWAY_ROAD_NUMBER_de1.png
+      MOTORWAY_ROAD_NUMBER = 230;
+      // @img HIGHWAY_ROAD_NUMBER_de1.png
+      HIGHWAY_ROAD_NUMBER = 231;
+      // @img HIGHWAY_INTERCHANGE_NUMBER_de1.png
+      HIGHWAY_INTERCHANGE_NUMBER = 232;
+      // @img EUROPEAN_ROAD_NUMBER_de1.png
+      EUROPEAN_ROAD_NUMBER = 233;
+      // @img SPEED_LIMIT_ZONE_de1.png
+      SPEED_LIMIT_ZONE = 234;
+      // @img SPEED_LIMIT_ZONE_END_de1.png
+      SPEED_LIMIT_ZONE_END = 235;
+      // @img NO_PARKING_ZONE_de1.png
+      NO_PARKING_ZONE = 236;
+      // @img NO_PARKING_ZONE_END_de1.png
+      NO_PARKING_ZONE_END = 237;
+      // @img PARKING_ZONE_de1.png
+      PARKING_ZONE = 238;
+      // @img PARKING_ZONE_END_de1.png
+      PARKING_ZONE_END = 239;
+      // If sensor is not aware of left or right restriction, or was not present on sign.
+      // @img PARKING_de1.png
+      PARKING = 240;
+      // @img PARKING_TO_LEFT_de1.png
+      PARKING_TO_LEFT = 241;
+      // @img PARKING_TO_RIGHT_de1.png
+      PARKING_TO_RIGHT = 242;
+      // @img PARKING_GARAGE_de1.png
+      PARKING_GARAGE = 243;
+      // @img PARKING_ON_SIDEWAY_de1.png
+      PARKING_ON_SIDEWAY = 244;
+      SAFETY_DISTANCE = 245;
+      SAFETY_DISTANCE_VEHICLE = 246;
+      // @img SAFETY_DISTANCE_TRUCK_de1.png
+      SAFETY_DISTANCE_TRUCK = 247;
+      // If sensor is not aware of left or right restriction.
+      // @img DETOUR_de1.png
+      DETOUR = 248;
+      // @img DETOUR_END_de1.png
+      DETOUR_END = 249;
+      DETOUR_LEFT = 250;
+      // @img DETOUR_RIGHT_de1.png
+      DETOUR_RIGHT = 251;
+      // @img STATION_GAS_de1.png
+      STATION_GAS = 252;
+      // @img STATION_LPG_de1.png
+      STATION_LPG = 253;
+      // @img STATION_CNG_de1.png
+      STATION_CNG = 254;
+      // @img STATION_H2_de1.png
+      STATION_H2 = 255;
+      // @img STATION_ELECTRO_de1.png
+      STATION_ELECTRO = 256;
+      // @img STATION_POLICE_de1.png
+      STATION_POLICE = 257;
+      // @img CAMPING_SPOT_de1.png
+      CAMPING_SPOT = 258;
+      // @img RESTROOMS_de1.png
+      RESTROOMS = 259;
+      // @img INFO_POINT_de1.png
+      INFO_POINT = 260;
+      // @img MOTORWAY_EXIT_AHEAD_de1.png
+      MOTORWAY_EXIT_AHEAD = 261;
+      // @img HIGHWAY_EXIT_AHEAD_de1.png
+      HIGHWAY_EXIT_AHEAD = 262;
+      // @img MOTORWAY_EXIT_de1.png
+      MOTORWAY_EXIT = 263;
+      // @img HIGHWAY_EXIT_de1.png
+      HIGHWAY_EXIT = 264;
+      // @img FIRST_AID_de1.png
+      FIRST_AID = 265;
+      // @img LOW_FLYING_de1.png
+      LOW_FLYING = 266;
+      // If sensor is not aware of left or right restriction.
+      LANE_SHIFT = 267;
+      // @img LANE_SHIFT_TO_LEFT_de1.png
+      LANE_SHIFT_TO_LEFT = 268;
+      LANE_SHIFT_TO_RIGHT = 269;
+      // @img PEDESTRIAN_UNDERPASS_de1.png
+      PEDESTRIAN_UNDERPASS = 270;
+      // @img PEDESTRIAN_OVERPASS_de1.png
+      PEDESTRIAN_OVERPASS = 271;
+      // @img BREAKDOWN_BAY_de1.png
+      BREAKDOWN_BAY = 272;
+      // @img BUS_LANE_de1.png
+      BUS_LANE = 273;
+      // @img DOUBLE_HAIRPIN_cn1.png
+      DOUBLE_HAIRPIN = 274;
+      // @img COUNTRY_SPECIFIC_INFORMATION_de1.png
+      COUNTRY_SPECIFIC_INFORMATION = 275;
+      // @img PEDESTRIAN_BICYCLE_SHARED_PATH_de1.png
+      PEDESTRIAN_BICYCLE_SHARED_PATH = 276;
+      // @img OVERHEAD_LANE_CONTROL_CLOSED_us1.png
+      OVERHEAD_LANE_CONTROL_CLOSED = 277;
+      // @img OVERHEAD_LANE_CONTROL_OPEN_us1.png
+      OVERHEAD_LANE_CONTROL_OPEN = 278;
+      // Left lane is closing, hence arrow points to the right.
+      // @img OVERHEAD_LANE_CONTROL_CLOSING_LEFT_de1.png
+      OVERHEAD_LANE_CONTROL_CLOSING_LEFT = 279;
+      // Right lane is closing, hence arrow points to the left.
+      OVERHEAD_LANE_CONTROL_CLOSING_RIGHT = 280;
+      // Arrow pointing to left side and flashing.
+      OVERHEAD_LANE_CONTROL_FLASH_ARROW_LEFT = 281;
+      // Arrow pointing to right side and flashing.
+      OVERHEAD_LANE_CONTROL_FLASH_ARROW_RIGHT = 282;
+      // @img TRINATURE_de1.png
+      TRINATURE = 283;
+      // @img ANIMAL_FROG_de1.png
+      ANIMAL_FROG = 284;
+      // @img GRAVEL_de1.png
+      GRAVEL = 285;
+      // @img WARNING_PEDESTRIAN_CROSSING_de1.png
+      WARNING_PEDESTRIAN_CROSSING = 286;
+      // @img LOW_TREE_de1.png
+      LOW_TREE = 287;
+      // @img WARNING_RIDER_de1.png
+      WARNING_RIDER = 288;
+      // @img STOP_AHEAD_us1.png
+      STOP_AHEAD = 289;
+      // @img YIELD_AHEAD_us1.png
+      YIELD_AHEAD = 290;
+      // @img WATER_PROTECTION_AREA_de1.png
+      WATER_PROTECTION_AREA = 291;
+      // @img TOLL_DOUANE_de1.png
+      TOLL_DOUANE = 292;
+      // @img NO_CAR_OR_BIKE_de1.png
+      NO_CAR_OR_BIKE = 293;
+      // @img DRIVING_DIRECTION_ONLY_UP_de1.png
+      DRIVING_DIRECTION_ONLY_UP = 294;
+      // @img DRIVING_DIRECTION_UP_AND_DOWN_de1.png
+      DRIVING_DIRECTION_UP_AND_DOWN = 295;
+      // @img MILITARY_SIGN_de1.png
+      MILITARY_SIGN = 296;
+      // @img SMOG_de1.png
+      SMOG = 297;
+      // @img ROUNDABOUT_AHEAD_de1.png
+      ROUNDABOUT_AHEAD = 298;
+      // @img MANDATORY_LEFT_OR_STRAIGHT_OR_RIGHT_de1.png
+      MANDATORY_LEFT_OR_STRAIGHT_OR_RIGHT = 299;
+      // @img DEAD_END_RIGHT_fr1.png
+      DEAD_END_RIGHT = 300;
+      DEAD_END_LEFT = 301;
+      // @img TOLL_TRUCK_de1.png
+      TOLL_TRUCK = 302;
+      // @img TOLL_TRUCK_END_de1.png
+      TOLL_TRUCK_END = 303;
+      // @img STAGGERED_JUNCTION_uk1.png @img STAGGERED_JUNCTION_uk2.png
+      STAGGERED_JUNCTION = 304;
+      // @img AXLE_WEIGHT_RESTRICTION_de1.png
+      AXLE_WEIGHT_RESTRICTION = 305;
+      // A sign notifying the general end of a toll-road.
+      TOLL_END = 306;
+      // A sign notifying the end of a toll-road for cars.
+      TOLL_CAR_END = 307;
+      // A sign notifying the end of a toll-lane.
+      TOLL_LANE_END = 308;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+
+    // If the type or additional information is known by the sensor, then it may be provided as string.
+    google.protobuf.StringValue other_text = 3;
+  }
+
+  // Value and confidence.
+  message ValueAndConfidence {
+    // All classified sign values which are not defined or not fully defined in type may be provided as value.
+    //
+    // @example Value 70 for traffic sign type SPEED_LIMIT for a speed limit sign with a limit of 70.
+    google.protobuf.StringValue value = 1;
+
+    // Confidence of value.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Permanency and confidence.
+  message PermanencyAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Traffic sign is static and not variable.
+      STATIC = 1;
+      // Any variable traffic sign, e.g. LED sign or flip sign.
+      VARIABLE = 2;
+      // Traffic sign is a variable LED sign (this should be preferred over VARIABLE if known).
+      VARIABLE_ELECTRONICALLY = 3;
+      // Traffic sign is a variable flip sign (this should be preferred over VARIABLE if known).
+      VARIABLE_MECHANICALLY = 4;
+      // Traffic sign is variable and deactivated (e.g. LED panel switched off).
+      VARIABLE_DEACTIVATED = 5;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Validation and confidence.
+  message ValidationAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Traffic sign is observed as valid, i.e. traffic sign is not temporary invalidated due to road construction (e.g. crossed out by red marker).
+      VALID = 1;
+      // Traffic sign is observed as invalid, i.e. if the sign is temporary invalidated due to a road construction (e.g. crossed out by red marker).
+      INVALID = 2;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Dominant background color and confidence.
+  message DominantBackgroundColorAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Other, i.e. none of the listed enum values.
+      OTHER = 1;
+      // White.
+      WHITE = 2;
+      // Red.
+      RED = 3;
+      // Green.
+      GREEN = 4;
+      // Blue.
+      BLUE = 5;
+      // Yellow.
+      YELLOW = 6;
+      // Black.
+      BLACK = 7;
+      // Brown.
+      BROWN = 8;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Supplementary sign and confidence.
+  message SupplementarySignAndConfidence {
+    // Type and confidence.
+    message TypeAndConfidence {
+      // Type of the supplementary traffic sign face.
+      enum Type {
+        UNKNOWN_TYPE = 0;
+        // Other, i.e. none of the listed enum values. However, if the type is known by the sensor, then it may be provided as string in the field other_text.
+        SUP_OTHER_AS_TEXT = 1;
+        // @img SUP_WET_de1.png
+        SUP_WET = 2;
+        // @img SUP_RAIN_de1.png
+        SUP_RAIN = 3;
+        // @img SUP_SNOW_de1.png
+        SUP_SNOW = 4;
+        SUP_SNOW_OR_RAIN = 5;
+        // @img SUP_FOG_de1.png
+        SUP_FOG = 6;
+        // The specific time may be provided in the field value_and_confidence.
+        // @img SUP_TIME_de1.png
+        SUP_TIME = 7;
+        // The specific time may be provided in the field value_and_confidence. The format should be "Mo-Fr 16-18 h" or if available exact text format of sign.
+        // @img SUP_DAY_AND_TIME_de1.png
+        SUP_DAY_AND_TIME = 8;
+        // The specific time may be provided in the field value_and_confidence.
+        SUP_NIGHT = 9;
+        SUP_SEASON = 10;
+        SUP_WORKDAYS = 11;
+        // The specific time may be provided in the field value_and_confidence.
+        SUP_WORKDAYS_AND_TIME = 12;
+        // @img SUP_SCHOOL_de1.png
+        SUP_SCHOOL = 13;
+        SUP_RAMP = 14;
+        // @img SUP_TRUCK_de1.png
+        SUP_TRUCK = 15;
+        // @img SUP_TRUCK_WITH_TRAILER_de1.png
+        SUP_TRUCK_WITH_TRAILER = 16;
+        // @img SUP_PASSENGER_CAR_de1.png
+        SUP_PASSENGER_CAR = 17;
+        // @img SUP_PASSENGER_CAR_WITH_TAILER_de1.png
+        SUP_PASSENGER_CAR_WITH_TAILER = 18;
+        // @img SUP_TRACTOR_EXCEPT_de1.png
+        SUP_TRACTOR_EXCEPT = 19;
+        // @img SUP_BUS_de1.png
+        SUP_BUS = 20;
+        SUP_TRUCKS_AND_BUS = 21;
+        SUP_CARS_TRUCKS_BUS = 22;
+        // @img SUP_TAXI_de1.png
+        SUP_TAXI = 23;
+        // @img SUP_TANK_de1.png
+        SUP_TANK = 24;
+        // @img SUP_ROADSIDE_de1.png
+        SUP_ROADSIDE = 25;
+        // The weight limitation may be provided in the field value_and_confidence. The format is to be provided in "xx.x t" defining the weight in xx.x tons or "xxxxxx.x lbs" defining the weight in x pounds.
+        // @img SUP_WEIGHT_de1.png
+        SUP_WEIGHT = 26;
+        // The start of the validity may be provided in the field value_and_confidence. The format should be "xxx m" or if available exact text format of sign.
+        // @img SUP_STARTING_IN_de1.png
+        SUP_STARTING_IN = 27;
+        // The end of the validity may be provided in the field value_and_confidence. The format should be "xxx m" or if available exact text format of sign.
+        // @img SUP_VALID_FOR_de1.png
+        SUP_VALID_FOR = 28;
+        // The sign is valid for turning lane(s) to the right side.
+        // @img SUP_IN_RIGHT_DIRECTION_de1.png
+        SUP_IN_RIGHT_DIRECTION = 29;
+        // The sign is valid for turning lane(s) to the left side.
+        // @img SUP_IN_LEFT_DIRECTION_de1.png
+        SUP_IN_LEFT_DIRECTION = 30;
+        SUP_ZONE = 31;
+        SUP_ZONE_START = 32;
+        SUP_ZONE_END = 33;
+        // The validity of the traffic signs begins at the sign (no further distance information required).
+        SUP_BEGIN_OF_VALIDITY = 34;
+        // The validity of the traffic signs ends at the sign (no further distance information required).
+        SUP_END_OF_VALIDITY = 35;
+        // @img SUP_FROG_de1.png
+        SUP_FROG = 36;
+        // @img SUP_ALL_WAY_de1.png
+        SUP_ALL_WAY = 37;
+        // @img SUP_BIKE_de1.png
+        SUP_BIKE = 38;
+        // @img SUP_BIKE_EXCEPT_de1.png
+        SUP_BIKE_EXCEPT = 39;
+        // @img SUP_BUS_EXCEPT_de1.png
+        SUP_BUS_EXCEPT = 40;
+        // @img SUP_CAMPER_de1.png
+        SUP_CAMPER = 41;
+        // @img SUP_CARAVAN_de1.png
+        SUP_CARAVAN = 42;
+        // @img SUP_CONSTRUCTION_GATEWAY_de1.png
+        SUP_CONSTRUCTION_GATEWAY = 43;
+        // @img SUP_CROSS_WAY_de1.png
+        SUP_CROSS_WAY = 44;
+        // @img SUP_DELIVERY_EXCEPT_de1.png
+        SUP_DELIVERY_EXCEPT = 45;
+        // @img SUP_ELECTRONIC_CAR_de1.png
+        SUP_ELECTRONIC_CAR = 46;
+        // @img SUP_GATEWAY_de1.png
+        SUP_GATEWAY = 47;
+        // @img SUP_GIVE_WAY_LEFT_de1.png
+        SUP_GIVE_WAY_LEFT = 48;
+        // @img SUP_GIVE_WAY_RIGHT_de1.png
+        SUP_GIVE_WAY_RIGHT = 49;
+        // @img SUP_GRAVEL_de1.png
+        SUP_GRAVEL = 50;
+        // @img SUP_HAZMAT_de1.png
+        SUP_HAZMAT = 51;
+        // @img SUP_HAZ_WATER_de1.png
+        SUP_HAZ_WATER = 52;
+        // @img SUP_KIDS_de1.png
+        SUP_KIDS = 53;
+        // @img SUP_LOCAL_EXCEP_de1.png
+        SUP_LOCAL_EXCEP = 54;
+        // @img SUP_LOW_TREE_de1.png
+        SUP_LOW_TREE = 55;
+        // @img SUP_MOTORCYCLE_de1.png
+        SUP_MOTORCYCLE = 56;
+        // @img SUP_MOTORCYCLE_EXCEPT_de1.png
+        SUP_MOTORCYCLE_EXCEPT = 57;
+        // @img SUP_NEW_ROAD_BED_de1.png
+        SUP_NEW_ROAD_BED = 58;
+        // @img SUP_NO_STOP_SHOULDER_de1.png
+        SUP_NO_STOP_SHOULDER = 59;
+        // @img SUP_OIL_TRAIL_de1.png
+        SUP_OIL_TRAIL = 60;
+        // @img SUP_PASSENGER_CAR_EXCEPT_de1.png
+        SUP_PASSENGER_CAR_EXCEPT = 61;
+        // @img SUP_PASSENGER_CAR_WITH_TAILER_EXCEPT_de1.png
+        SUP_PASSENGER_CAR_WITH_TAILER_EXCEPT = 62;
+        // @img SUP_PEDESTRIAN_de1.png
+        SUP_PEDESTRIAN = 63;
+        // @img SUP_PRIORITY_TURN_LEFT_de1.png
+        SUP_PRIORITY_TURN_LEFT = 64;
+        // @img SUP_PRIORITY_TURN_RIGHT_de1.png
+        SUP_PRIORITY_TURN_RIGHT = 65;
+        // @img SUP_ROAD_DAMAGE_de1.png
+        SUP_ROAD_DAMAGE = 66;
+        // @img SUP_RUTS_de1.png
+        SUP_RUTS = 67;
+        // @img SUP_TRACTOR_de1.png
+        SUP_TRACTOR = 68;
+        // @img SUP_TRACTOR_MAY_BE_OVERTAKEN_de1.png
+        SUP_TRACTOR_MAY_BE_OVERTAKEN = 69;
+        // @img SUP_TRAFFIC_JAM_de1.png
+        SUP_TRAFFIC_JAM = 70;
+        // @img SUP_TRAIN_de1.png
+        SUP_TRAIN = 71;
+        // @img SUP_TRAM_de1.png
+        SUP_TRAM = 72;
+        // @img SUP_TRUCK_EXCEPT_de1.png
+        SUP_TRUCK_EXCEPT = 73;
+        // @img SUP_TRUCK_WITH_TRAILER_EXCEPT_de1.png
+        SUP_TRUCK_WITH_TRAILER_EXCEPT = 74;
+        // @img SUP_GET_IN_PROPER_LANE_de1.png
+        SUP_GET_IN_PROPER_LANE = 75;
+        // @img SUP_ROADSIDE_TRUCK_de1.png
+        SUP_ROADSIDE_TRUCK = 76;
+        // @img SUP_RAPPEL_fr1.jpg
+        SUP_RAPPEL = 77;
+        // @img SUP_RADAR_ENFORCED_de1.jpg
+        SUP_RADAR_ENFORCED = 78;
+        // The distance may be provided in the field value_and_confidence. The format should be "xxx m" or if available exact text format of sign.
+        // @img SUP_STOP_IN_DISTANCE_de1.png
+        SUP_STOP_IN_DISTANCE = 79;
+      }
+
+      // Type.
+      Type type = 1;
+
+      // Confidence of type.
+      sensoris.protobuf.types.base.Confidence confidence = 2;
+
+      // If the type or additional information is known by the sensor, then it may be provided as string.
+      google.protobuf.StringValue other_text = 3;
+    }
+
+    // Confidence that a supplementary sign has been detected.
+    sensoris.protobuf.types.base.Confidence existence_confidence = 1;
+
+    // Event detection status of supplementary sign.
+    sensoris.protobuf.types.base.EventDetectionStatus detection_status = 2;
+
+    // Type and confidence of supplementary sign.
+    TypeAndConfidence type_and_confidence = 3;
+
+    // Value of supplementary sign in addition to type.
+    ValueAndConfidence value_and_confidence = 4;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Confidence that a main sign has been detected.
+  sensoris.protobuf.types.base.Confidence existence_confidence = 2;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 3;
+
+  // Rectangular box and accuracy of main sign, i.e. without supplementary sign(s).
+  sensoris.protobuf.types.spatial.RectangularBoxAndAccuracy rectangular_box_and_accuracy = 4;
+
+  // Shape and confidence of main sign.
+  ShapeAndConfidence shape_and_confidence = 5;
+
+  // Type and confidence of main sign.
+  TypeAndConfidence type_and_confidence = 6;
+
+  // Value of main sign in addition to type.
+  ValueAndConfidence value_and_confidence = 7;
+
+  // Permanency of main sign provides information if a traffic sign is permanent of variable, e.g. LED.
+  PermanencyAndConfidence permanency_and_confidence = 8;
+
+  // Validation of main sign provides information if the traffic sign was invalidated by a traffic authority.
+  ValidationAndConfidence validation_and_confidence = 9;
+
+  // Dominant background color and confidence of main sign.
+  DominantBackgroundColorAndConfidence background_color_and_confidence = 10;
+
+  // Supplementary sign, which is an attached sign in addition to main sign.
+  repeated SupplementarySignAndConfidence supplementary_sign_and_confidence = 11;
+}
+
+// Traffic regulation category.
+message TrafficRegulationCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Traffic sign.
+  repeated TrafficSign traffic_sign = 2;
+}

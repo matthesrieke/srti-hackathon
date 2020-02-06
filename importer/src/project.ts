@@ -1,0 +1,34 @@
+export class Project {
+    id: string;
+    updated: Date;
+    contact: string;
+    name: string;
+    fullTitle: string;
+    type: string;
+    url: string;
+    description: string;
+    overallGoal: string;
+    logoUrl: string;
+    startDate: string;
+    endDate: string;
+    budget: number;
+    customer: string;
+    programme: string;
+    usedComponents: string[];
+    isImprovedComponents: boolean;
+    improvedComponents: string[];
+    newFeaturesForImprovedComponents: string[];
+    developmentTarget: string[];
+    developmentTimeline: string;
+    codeManagement: string[];
+    isNewComponents: boolean;
+    newComponents: string[];
+    usedTechnologies: string[];
+    architectureOverview: string;
+    isLongtermUsage: boolean;
+    grantNo: string;
+    executingAgency: string;
+    acknowledgement: string;
+    partner: string[];
+    team: string[];
+}

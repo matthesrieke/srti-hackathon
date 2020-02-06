@@ -1,0 +1,224 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.localization;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.localization";
+option java_outer_classname = "SensorisLocalizationCategory";
+option java_multiple_files = true;
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+import "sensoris/protobuf/types/spatial.proto";
+
+//
+// Vehicle position and rotation.
+//
+
+// Vehicle position and orientation.
+//
+// @relation 1 sensoris.protobuf.categories.localization.VehicleOdometry START 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.localization.VehicleOdometry END 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.drivingbehavior.ParkingStatus START_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.drivingbehavior.ParkingStatus END_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.TrafficCondition START_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.TrafficCondition END_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWorks START_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWorks END_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWeatherCondition START_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficevents.RoadWeatherCondition END_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+message VehiclePositionAndOrientation {
+  // Status of navigation satellite system.
+  message NavigationSatelliteSystemStatus {
+    // Fix type.
+    enum FixType {
+      // Unknown.
+      UNKNOWN_FIX_TYPE = 0;
+      // No fix.
+      NONE = 1;
+      // 2 D fix.
+      TWO_D = 2;
+      // 2 D fix using satellite based augmentation.
+      TWO_D_SATELLITE_BASED_AUGMENTATION = 3;
+      // 2 D fix using ground based augmentation.
+      TWO_D_GROUND_BASED_AUGMENTATION = 4;
+      // 2 D fix using satellite and ground based augmentation.
+      TWO_D_SATELLITE_AND_GROUND_BASED_AUGMENTATION = 5;
+      // 3 D fix using satellite based augmentation.
+      THREE_D = 6;
+      // 3 D fix using satellite based augmentation.
+      THREE_D_SATELLITE_BASED_AUGMENTATION = 7;
+      // 3 D fix using ground based augmentation.
+      THREE_D_GROUND_BASED_AUGMENTATION = 8;
+      // 3 D fix using satellite and ground based augmentation.
+      THREE_D_SATELLITE_AND_GROUND_BASED_AUGMENTATION = 9;
+    }
+
+    // Fix type.
+    FixType fix_type = 1;
+
+    // Total number of satellites used for fix.
+    //
+    // @unit 1
+    // @resolution 1
+    // @range [1, )
+    sensoris.protobuf.types.base.Int64Value count = 2;
+
+    // Horizontal dilution of precision.
+    //
+    // @unit 1
+    // @resolution 0.01
+    // @range (0, )
+    sensoris.protobuf.types.base.Int64Value hdop = 3 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Vertical dilution of precision.
+    //
+    // @unit 1
+    // @resolution 0.01
+    // @range (0, )
+    sensoris.protobuf.types.base.Int64Value vdop = 4 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Position dilution of precision.
+    //
+    // @unit 1
+    // @resolution 0.01
+    // @range (0, )
+    sensoris.protobuf.types.base.Int64Value pdop = 5 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Time dilution of precision.
+    //
+    // @unit 1
+    // @resolution 0.01
+    // @range (0, )
+    sensoris.protobuf.types.base.Int64Value tdop = 6 [(sensoris.protobuf.types.base.exponent) = 2];
+
+    // Signal-to-noise ratio of the satellite signal.
+    //
+    // @unit Decibel
+    // @resolution 0.1
+    // @range ( , )
+    sensoris.protobuf.types.base.Int64Value snr = 8 [(sensoris.protobuf.types.base.exponent) = 1];
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Position and accuracy.
+  sensoris.protobuf.types.spatial.PositionAndAccuracy position_and_accuracy = 2;
+
+  // Orientation and accuracy.
+  sensoris.protobuf.types.spatial.RotationAndAccuracy orientation_and_accuracy = 3;
+
+  // Status for event source sensor NavigationSatelliteSystem.
+  NavigationSatelliteSystemStatus navigation_satellite_system_status = 4;
+}
+
+//
+// Vehicle odometry.
+//
+
+// Vehicle odometry.
+//
+// A vehicle odometry describes the translation and rotation from the vehicle position at envelope.timestamp to the vehicle position at end_timestamp.
+//
+// The start and end vehicle position of a vehicle odometry can be set explicitly with event relations of type START and END.
+//
+// @relation 1 sensoris.protobuf.categories.localization.VehicleOdometry START 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.localization.VehicleOdometry END 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+message VehicleOdometry {
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // End timestamp.
+  //
+  // If the end timestamp and the event relation of type END are not set, then the end timestamp is the timestamp of the vehicle position directly following the envelope.timestamp.
+  sensoris.protobuf.types.base.Timestamp end_timestamp = 2;
+
+  // Translation and accuracy.
+  sensoris.protobuf.types.spatial.PositionAndAccuracy translation_and_accuracy = 3;
+
+  // Rotation and accuracy.
+  sensoris.protobuf.types.spatial.RotationAndAccuracy rotation_and_accuracy = 4;
+}
+
+//
+// Vehicle dynamics.
+//
+
+// Vehicle speed.
+//
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.localization.VehicleSpeed
+message VehicleSpeed {
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Value and accuracy.
+  //
+  // @unit Meter per Second
+  // @resolution 0.1
+  // @range [0, )
+  sensoris.protobuf.types.spatial.XyzVectorAndAccuracy value_and_accuracy = 2 [(sensoris.protobuf.types.base.exponent) = 1];
+}
+
+// Vehicle acceleration.
+//
+// @relation 1..* sensoris.protobuf.categories.localization.VehicleAcceleration TRIGGERED_BY 1 sensoris.protobuf.categories.brake.BrakeSystemsStatus
+// @relation 1 sensoris.protobuf.categories.brake.BrakeSystemsStatus TRIGGERED_BY 1..* sensoris.protobuf.categories.localization.VehicleAcceleration
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.localization.VehicleAcceleration
+message VehicleAcceleration {
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Value and accuracy.
+  //
+  // @unit Meter per Second Squared
+  // @resolution 0.1
+  // @range ( , )
+  sensoris.protobuf.types.spatial.XyzVectorAndAccuracy value_and_accuracy = 2 [(sensoris.protobuf.types.base.exponent) = 1];
+}
+
+// Vehicle rotation rate.
+//
+// @relation 1 sensoris.protobuf.categories.trafficmaneuver.Maneuver TRIGGERED_BY 1..* sensoris.protobuf.categories.localization.VehicleRotationRate
+message VehicleRotationRate {
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Value and accuracy.
+  sensoris.protobuf.types.spatial.RotationRateAndAccuracy value_and_accuracy = 2;
+}
+
+//
+// Localization category.
+//
+
+// Localization category.
+message LocalizationCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Vehicle position and rotation.
+  repeated VehiclePositionAndOrientation vehicle_position_and_orientation = 2;
+
+  // Vehicle odometry.
+  repeated VehicleOdometry vehicle_odometry = 3;
+
+  // Vehicle speed.
+  repeated VehicleSpeed vehicle_speed = 4;
+
+  // Vehicle acceleration.
+  repeated VehicleAcceleration vehicle_acceleration = 5;
+
+  // Vehicle rotation rate.
+  repeated VehicleRotationRate vehicle_rotation_rate = 6;
+}

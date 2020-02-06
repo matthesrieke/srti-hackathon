@@ -1,0 +1,730 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.roadattribution;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.roadattribution";
+option java_outer_classname = "SensorisRoadAttributionCategory";
+option java_multiple_files = true;
+
+// Import Google message types.
+import "google/protobuf/wrappers.proto";
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+import "sensoris/protobuf/types/spatial.proto";
+
+//
+// Common types.
+//
+
+// Marking color and confidence.
+message MarkingColorAndConfidence {
+  // Type.
+  enum Type {
+    // Unknown.
+    UNKNOWN_TYPE = 0;
+    // White.
+    WHITE = 1;
+    // Gray.
+    GRAY = 2;
+    // Light gray.
+    GRAY_LIGHT = 3;
+    // Dark gray.
+    GRAY_DARK = 4;
+    // Black.
+    BLACK = 5;
+    // Red.
+    RED = 6;
+    // Yellow.
+    YELLOW = 7;
+    // Green.
+    GREEN = 8;
+    // Cyan.
+    CYAN = 9;
+    // Blue.
+    BLUE = 10;
+    // Orange.
+    ORANGE = 11;
+    // Pink.
+    PINK = 12;
+  }
+
+  // Type.
+  Type type = 1;
+
+  // Confidence of type.
+  sensoris.protobuf.types.base.Confidence confidence = 2;
+}
+
+// Marking material and confidence.
+message MarkingMaterialAndConfidence {
+  // Type.
+  enum Type {
+    // Unknown.
+    UNKNOWN_TYPE = 0;
+    // Metal.
+    METAL = 1;
+    // Concrete.
+    CONCRETE = 2;
+    // Stone.
+    STONE = 3;
+    // Wood.
+    WOOD = 4;
+    // Plastic.
+    PLASTIC = 5;
+    // Transparent.
+    TRANSPARENT = 6;
+    // Raised markings or markings cut into the road.
+    VIBRATION_MARKINGS = 7;
+    // Paint.
+    PAINT = 8;
+    // Asphalt.
+    ASPHALT = 9;
+    // Gravel.
+    GRAVEL = 10;
+    // Cobblestone.
+    COBBLESTONE = 11;
+  }
+
+  // Type.
+  Type type = 1;
+
+  // Confidence of type.
+  sensoris.protobuf.types.base.Confidence confidence = 2;
+}
+
+// Surface material and confidence.
+message SurfaceMaterialAndConfidence {
+  // Type.
+  enum Type {
+    // Unknown.
+    UNKNOWN_TYPE = 0;
+    // Asphalt.
+    ASPHALT = 1;
+    // Concrete.
+    CONCRETE = 2;
+    // Composite pavement.
+    COMPOSITE_PAVEMENT = 3;
+    // Recycling.
+    RECYCLING = 4;
+    // Gravel.
+    GRAVEL = 5;
+    // Cobblestone.
+    COBBLESTONE = 6;
+  }
+
+  // Type.
+  Type type = 1;
+
+  // Confidence of type.
+  sensoris.protobuf.types.base.Confidence confidence = 2;
+}
+
+// Inclination and curvature.
+message InclinationAndCurvature {
+  // Longitudinal declination and accuracy, also referred as slope.
+  //
+  // @unit Degree
+  // @resolution 0.01
+  // @range (-90, 90)
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy longitudinal_inclination_and_accuracy = 1 [(sensoris.protobuf.types.base.exponent) = 2];
+
+  // Lateral declination and accuracy, also referred as cross fall.
+  //
+  // @unit Degree
+  // @resolution 0.01
+  // @range (-90, 90)
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy lateral_inclination_and_accuracy = 2 [(sensoris.protobuf.types.base.exponent) = 2];
+
+  // Horizontal curvature and accuracy.
+  //
+  // Negative value represents curve to the left, positive value represents curve to the right. Value of 0 represents straight road. The value is the reciproke of the radius (curvature = 1/radius) whereas high radii are represented by low values.
+  //
+  // @unit 1 per KiloMeter
+  // @resolution 0.1
+  // @range ( , )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy horizontal_curvature_and_accuracy = 3 [(sensoris.protobuf.types.base.exponent) = 3];
+}
+
+//
+// Lane boundary, lane boundary merge or split, lane and road.
+//
+
+// Lane boundary.
+//
+// For a single lane several lane boundaries to the left or right may be given. If a lane has several lane boundaries in one direction, then the lane boundaries shall be sorted by their distance to the lane.
+//
+// @relation 1..* sensoris.protobuf.categories.roadattribution.LaneBoundary LEFT_OF 1 sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1..* sensoris.protobuf.categories.roadattribution.LaneBoundary RIGHT_OF 1 sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1 sensoris.protobuf.categories.roadattribution.LaneBoundaryMergeSplit DERIVED_FROM 2..* sensoris.protobuf.categories.roadattribution.LaneBoundary
+//
+// @example L1 Lane R1 R2
+// Lane with lane boundary L1 to the left of type LINE_SINGLE_SOLID and lane boundaries R1 and R2 to the right with R1 of type LINE_SINGLE_SOLID and R2 of type ROAD_EDGE.
+message LaneBoundary {
+  // Type and confidence.
+  message TypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Any line.
+      LINE = 1;
+      // Any single line.
+      LINE_SINGLE = 2;
+      // Single solid line.
+      LINE_SINGLE_SOLID = 3;
+      // Any single dashed line.
+      LINE_SINGLE_DASHED = 4;
+      // Single dashed line with short dashes.
+      LINE_SINGLE_DASHED_SHORT = 5;
+      // Single dashed line with long dashes.
+      LINE_SINGLE_DASHED_LONG = 6;
+      // Any double line.
+      LINE_DOUBLE = 7;
+      // Double line composed of two solid lines.
+      LINE_DOUBLE_SOLID = 8;
+      // Double line composed of two dashed lines.
+      LINE_DOUBLE_DASHED = 9;
+      // Double line composed of solid left line and dashed right line in direction of lane boundary geometry.
+      LINE_DOUBLE_SOLID_DASHED = 10;
+      // Double line composed of dashed left line and solid right line in direction of lane boundary geometry.
+      LINE_DOUBLE_DASHED_SOLID = 11;
+      // Single marking inside of shaded area.
+      SHADED_AREA_MARKING = 12;
+      // Dashed blocks.
+      BLOCKS_DASHED = 13;
+      // Crossing alert.
+      CROSSING_ALERT = 14;
+      // Any curb.
+      CURB = 15;
+      // Traversable curb, i.e. vehicle is allowed to cross traversable curbs in normal traffic situations.
+      CURB_TRAVERSABLE = 16;
+      // Non-traversable curb.
+      CURB_NON_TRAVERSABLE = 17;
+      // Any physical divider.
+      PHYSICAL_DIVIDER = 18;
+      // Any wall.
+      WALL = 19;
+      // Flat wall.
+      WALL_FLAT = 20;
+      // Curved wall, e.g. wall of a tunnel.
+      WALL_CURVED = 21;
+      // Any barrier.
+      BARRIER = 22;
+      // Jersey barrier.
+      BARRIER_JERSEY = 23;
+      // Sound barrier.
+      BARRIER_SOUND = 24;
+      // Cable barrier.
+      BARRIER_CABLE = 25;
+      // Guardrail.
+      GUARDRAIL = 26;
+      // Fence.
+      FENCE = 27;
+      // Edge of road pavement.
+      ROAD_EDGE = 28;
+      // Cliff.
+      CLIFF = 29;
+      // Ditch.
+      DITCH = 30;
+      // Asphalt joint.
+      ASPHALT_JOINT = 31;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Position reference of lane boundary marking geometry, i.e. polyline_and_accuracy represents left boundary, center line or right boundary of the lane boundary markings.
+  //
+  // Whereas for e.g. lines all values may be used, for physical barriers the geometry shall represent the boundary closest to the vehicle.
+  enum PositionReference {
+    // Unknown.
+    UNKNOWN_POSITION_REFERENCE = 0;
+    // Left marking boundary.
+    LEFT_MARKING_BOUNDARY = 1;
+    // Center line.
+    CENTER_LINE = 2;
+    // Right marking boundary.
+    RIGHT_MARKING_BOUNDARY = 3;
+  }
+
+  // Statistics of length of single lane dashes and distance between single dashes on lane boundary geometry.
+  //
+  // Only applicable for lane boundaries of type LINE_SINGLE_DASHED, LINE_SINGLE_DASHED_SHORT, LINE_SINGLE_DASHED_LONG, LINE_DOUBLE_DASHED, LINE_DOUBLE_SOLID_DASHED, LINE_DOUBLE_DASHED_SOLID and BLOCKS_DASHED.
+  message DashStatistics {
+    // Length of single lane dash.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range (0, )
+    sensoris.protobuf.types.base.Int64ValueAndAccuracy length_and_accuracy = 2 [(sensoris.protobuf.types.base.exponent) = 0];
+
+    // Distance between single lane dashes.
+    //
+    // @unit MilliMeter
+    // @resolution 1
+    // @range (0, )
+    sensoris.protobuf.types.base.Int64ValueAndAccuracy distance_and_accuracy = 3 [(sensoris.protobuf.types.base.exponent) = 0];
+  }
+
+  // Offsets of markings as type and offset on lane boundary geometry relative to first vertex of lane boundary geometry.
+  //
+  // @example S---E    S--E for two lane dashes with S as START_OF_MARKING, and E as END_OF_MARKING.
+  // @example -O-O-  N O--O for two lane dashes with O as ON_MARKING and N as NO_MARKING.
+  message MarkingOffsets {
+    // Offset of markings as type and offset on lane boundary geometry relative to first vertex of lane boundary geometry.
+    message TypeAndOffset {
+      // Type.
+      enum Type {
+        // Unknown.
+        UNKNOWN_TYPE = 0;
+        // Start of marking.
+        START_OF_MARKING = 1;
+        // End of marking.
+        END_OF_MARKING = 2;
+        // On marking.
+        ON_MARKING = 3;
+        // No marking, e.g. between two markings.
+        NO_MARKING = 4;
+      }
+
+      // Type.
+      Type type = 1;
+
+      // Offset and accuracy.
+      //
+      // @unit MilliMeter
+      // @resolution 1
+      // @range [0, )
+      sensoris.protobuf.types.base.Int64ValueAndAccuracy offset_and_accuracy = 2 [(sensoris.protobuf.types.base.exponent) = 0];
+    }
+
+    // Offset of marking as type and offset on lane boundary geometry relative to first vertex of lane boundary geometry.
+    repeated TypeAndOffset type_and_offset = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Lane boundary identifier.
+  //
+  // Identifier is unique within a DataMessage and can be used to trace lane boundaries between LaneBoundary events.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range [1, )
+  google.protobuf.Int64Value lane_boundary_id = 2;
+
+  // Confidence that a lane boundary has been detected.
+  sensoris.protobuf.types.base.Confidence existence_confidence = 3;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 4;
+
+  // Type and confidence.
+  TypeAndConfidence type_and_confidence = 5;
+
+  // Material and confidence.
+  MarkingMaterialAndConfidence material_and_confidence = 6;
+
+  // Marking color and confidence.
+  MarkingColorAndConfidence color_and_confidence = 7;
+
+  // Position reference of lane boundary marking geometry, i.e. polyline_and_accuracy represents left boundary, center line or right boundary of the lane boundary markings.
+  //
+  // Whereas for e.g. lines all values may be used, for physical barriers the geometry shall represent the boundary closest to the vehicle.
+  PositionReference position_reference = 8;
+
+  oneof geometry {
+    // Polyline geometry.
+    //
+    // Polyline can also be a single point.
+    sensoris.protobuf.types.spatial.PolylineAndAccuracy polyline_and_accuracy = 9;
+  }
+
+  // Width and accuracy.
+  //
+  // @unit MilliMeter
+  // @resolution 1
+  // @range (0, )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy width_and_accuracy = 10 [(sensoris.protobuf.types.base.exponent) = 0];
+
+  // Height and accuracy.
+  //
+  // @unit MilliMeter
+  // @resolution 1
+  // @range [0, )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy height_and_accuracy = 11 [(sensoris.protobuf.types.base.exponent) = 0];
+
+  // Distance between parallel double lines.
+  //
+  // Only applicable for types LINE_DOUBLE, LINE_DOUBLE_SOLID, LINE_DOUBLE_DASHED, LINE_DOUBLE_SOLID_DASHED and LINE_DOUBLE_DASHED_SOLID.
+  //
+  // @unit MilliMeter
+  // @resolution 1
+  // @range (0, )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy distance_between_double_and_accuracy = 12 [(sensoris.protobuf.types.base.exponent) = 0];
+
+  // Additional information for markings.
+  oneof markings {
+    // Statistics of length of single lane dashes and offset between dashes on lane boundary geometry.
+    //
+    // Only applicable for lane boundaries of type LONG_DASHED_LINE, SOLID_LINE_DASHED_LINE, DASHED_LINE_SOLID_LINE, SHORT_DASHED, DASHED_BLOCKS and DOUBLE_DASHED_LINE.
+    DashStatistics dash_statistics = 13;
+
+    // Offsets of markings as type and offset on lane boundary geometry relative to first vertex of lane boundary geometry.
+    MarkingOffsets marking_offsets = 14;
+  }
+}
+
+// Lane boundary merge or split.
+//
+// @relation 1 sensoris.protobuf.categories.roadattribution.LaneBoundaryMergeSplit DERIVED_FROM 2..* sensoris.protobuf.categories.roadattribution.LaneBoundary
+message LaneBoundaryMergeSplit {
+  // Type and confidence.
+  message TypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Merge.
+      MERGE = 1;
+      // Split.
+      SPLIT = 2;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Confidence that a lane boundary merge or split has been detected.
+  sensoris.protobuf.types.base.Confidence existence_confidence = 2;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 3;
+
+  // Type and confidence.
+  TypeAndConfidence type_and_confidence = 4;
+
+  // Position and accuracy.
+  sensoris.protobuf.types.spatial.PositionAndAccuracy position_and_accuracy = 5;
+}
+
+// Lane.
+//
+// @relation 1..* sensoris.protobuf.categories.roadattribution.LaneBoundary LEFT_OF 1 sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1..* sensoris.protobuf.categories.roadattribution.LaneBoundary RIGHT_OF 1 sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1 sensoris.protobuf.categories.roadattribution.Lane LEFT_OF 1 sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1 sensoris.protobuf.categories.roadattribution.Lane RIGHT_OF 1 sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1 sensoris.protobuf.categories.roadattribution.Road CONTAIN 1..* sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1..* sensoris.protobuf.categories.roadattribution.SurfaceMarking IMPACT 1 sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1 sensoris.protobuf.categories.roadattribution.Lane CONTAINS 1..* sensoris.protobuf.categories.objectdetection.MovableObject
+// @relation 1 sensoris.protobuf.categories.roadattribution.Lane CONTAINS 1..* sensoris.protobuf.categories.objectdetection.StaticObject
+message Lane {
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Relative lane identifier.
+  //
+  // Identifier is 0 for ego-lane, +1 for lane directly left of vehicle, +2 for lane left of lane +1, -1 for lane directly right of vehicle, -2 for lane right of lane -1.
+  //
+  // @unit 1
+  // @resolution 1
+  // @range ( , )
+  google.protobuf.Int64Value relative_lane_id = 2;
+
+  // Width and accuracy.
+  //
+  // @unit MilliMeter
+  // @resolution 1
+  // @range (0, )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy width_and_accuracy = 3 [(sensoris.protobuf.types.base.exponent) = 0];
+
+  // Inclination and curvature.
+  InclinationAndCurvature inclination_and_curvature = 4;
+}
+
+// Road.
+//
+// @relation 1 sensoris.protobuf.categories.roadattribution.Road CONTAIN 1..* sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1..* sensoris.protobuf.categories.roadattribution.SurfaceMarking IMPACT 1 sensoris.protobuf.categories.roadattribution.Road
+message Road {
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Width and accuracy.
+  //
+  // @unit MilliMeter
+  // @resolution 1
+  // @range [1, )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy width_and_accuracy = 2;
+
+  // Inclination and curvature.
+  InclinationAndCurvature inclination_and_curvature = 3;
+}
+
+//
+// Surface marking.
+//
+
+// Surface marking.
+//
+// @relation 1..* sensoris.protobuf.categories.roadattribution.SurfaceMarking IMPACT 1 sensoris.protobuf.categories.roadattribution.Lane
+// @relation 1..* sensoris.protobuf.categories.roadattribution.SurfaceMarking IMPACT 1 sensoris.protobuf.categories.roadattribution.Road
+// @relation 1 sensoris.protobuf.categories.roadattribution.SurfaceMarking EQUAL 1 sensoris.protobuf.categories.trafficregulation.TrafficSign
+message SurfaceMarking {
+  // Type and confidence.
+  message TypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Sign painted on road surface.
+      //
+      // The sign can be detailed by an event relation of type EQUAL to 1 sensoris.protobuf.categories.trafficregulation.TrafficSign.
+      SIGN = 1;
+      // Text written on road surface. The text itself may be specified in the field text.
+      TEXT = 2;
+      // Graphic icon painted on road surface if it is not recognized as sign, text or one of the below enumeration items. The icon itself is not specified.
+      ICON = 3;
+      // Any patterned area painted on the road surface (e.g. chevron, crosswalk). The pattern itself is not specified.
+      PATTERN = 4;
+      // Combination of lines making up a crosswalk.
+      PATTERN_CROSSWALK = 5;
+      // Rectangular element of a line, for example a dot or block.
+      LINE_ELEMENT = 6;
+      // Line mainly perpendicular to the driving direction indicating where to stop.
+      STOP_LINE = 7;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Confidence that a surface marking has been detected.
+  sensoris.protobuf.types.base.Confidence existence_confidence = 2;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 3;
+
+  // Type and confidence.
+  TypeAndConfidence type_and_confidence = 4;
+
+  // Text on the surface if detailed specification is required additional to type.
+  google.protobuf.StringValue text = 5;
+
+  // Marking color and confidence.
+  repeated MarkingColorAndConfidence color_and_confidence = 6;
+
+  // Marking material and confidence.
+  repeated MarkingMaterialAndConfidence material_and_confidence = 7;
+
+  // Rectangular box and accuracy.
+  sensoris.protobuf.types.spatial.RectangularBoxAndAccuracy rectangular_box_and_accuracy = 8;
+}
+
+//
+// Surface attribution.
+//
+
+// Surface attribution.
+message SurfaceAttribution {
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Position and accuracy.
+  sensoris.protobuf.types.spatial.PositionAndAccuracy position_and_accuracy = 2;
+
+  // Inclination and curvature.
+  InclinationAndCurvature inclination_and_curvature = 3;
+
+  // Material and confidence.
+  repeated SurfaceMaterialAndConfidence material_and_confidence = 4;
+
+  // International Roughness Index (IRI).
+  //
+  // @unit MilliMeter per KiloMeter
+  // @resolution 1
+  // @range [0, )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy road_roughness_and_accuracy = 5 [(sensoris.protobuf.types.base.exponent) = 0];
+}
+
+// Road attribution.
+message RoadAttribution {
+  // Type and confidence.
+  message TypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Motorway.
+      MOTORWAY = 1;
+      // One way traffic.
+      ONE_WAY_TRAFFIC = 2;
+      // Two way traffic.
+      TWO_WAY_TRAFFIC = 3;
+      // Offroad.
+      OFFROAD = 4;
+      // Inside a tunnel.
+      TUNNEL = 5;
+      // On a bridge.
+      BRIDGE = 6;
+      // Artificial illumination.
+      ARTIFICIAL_ILLUMINATION = 7;
+      // Roadworks with narrow lanes.
+      ROAD_WORKS_NARROW_LANES = 8;
+      // Lane to the right.
+      LANE_RIGHT = 9;
+      // Lane to the left.
+      LANE_LEFT = 10;
+      // Lane split in the middle.
+      LANE_SPLIT_MIDDLE = 11;
+      // Lane merge in the middle.
+      LANE_MERGE_MIDDLE = 12;
+      // Crosswalk.
+      CROSSWALK = 13;
+      // Center turn lane.
+      CENTER_TURN_LANE = 14;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Change type and confidence.
+  message ChangeTypeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Change is detected.
+      DETECTED = 1;
+      // Start of change.
+      START = 2;
+      // End of change.
+      END = 3;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 2;
+
+  // Position and accuracy.
+  sensoris.protobuf.types.spatial.PositionAndAccuracy position_and_accuracy = 3;
+
+  // Type and confidence.
+  TypeAndConfidence type_and_confidence = 4;
+
+  // Change type and confidence.
+  ChangeTypeAndConfidence change_type_and_confidence = 5;
+}
+
+// Number of lanes and confidence.
+//
+// Count may be given either as 1 count of type TOTAL or as 2 counts of types LEFT_INCLUDING_EGO_LANE and RIGHT. The count of type LEFT_INCLUDING_EGO_LANE includes the vehicle ego lane.
+//
+// @example A count of 5 lanes of type TOTAL may be given as a count of 3 lanes of type LEFT_INCLUDING_EGO_LANE and 2 lanes of type RIGHT.
+message LaneCountAndConfidence {
+  // Type.
+  enum Type {
+    // Unknown.
+    UNKNOWN_TYPE = 0;
+    // Total lane count.
+    TOTAL = 1;
+    // Left lane count including ego lane.
+    LEFT_INCLUDING_EGO_LANE = 2;
+    // Right lane count.
+    RIGHT = 3;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Position and accuracy.
+  sensoris.protobuf.types.spatial.PositionAndAccuracy position_and_accuracy = 2;
+
+  // Type.
+  Type type = 3;
+
+  // Number of lanes and confidence.
+  sensoris.protobuf.types.base.CountAndConfidence count_and_confidence = 4;
+}
+
+//
+// Road attribution category.
+//
+
+// Road attribution category.
+message RoadAttributionCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Lane boundary.
+  repeated LaneBoundary lane_boundary = 2;
+
+  // Lane boundary merge or split.
+  repeated LaneBoundaryMergeSplit lane_boundary_merge_split = 3;
+
+  // Lane.
+  repeated Lane lane = 4;
+
+  // Road.
+  repeated Road road = 5;
+
+  // Surface marking.
+  repeated SurfaceMarking surface_marking = 6;
+
+  // Attributes of road surface.
+  repeated SurfaceAttribution surface_attribution = 7;
+
+  // Attributes of road.
+  repeated RoadAttribution road_attribution = 8;
+
+  // Detected number of lanes and confidence.
+  //
+  // Detected lane count may be less than the actual lane count of the road.
+  repeated LaneCountAndConfidence detected_lane_count_and_confidence = 9;
+
+  // Estimated number of lanes and confidence.
+  //
+  // Estimated lane count derived from multiple lane detections, which may be higher than the detected lane count and unprecise to the actual lane count on the road.
+  repeated LaneCountAndConfidence estimated_lane_count_and_confidence = 10;
+}

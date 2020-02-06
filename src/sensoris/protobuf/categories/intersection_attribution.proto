@@ -1,0 +1,184 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.intersectionattribution;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.intersectionattribution";
+option java_outer_classname = "SensorisIntersectionAttributionCategory";
+option java_multiple_files = true;
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+import "sensoris/protobuf/types/spatial.proto";
+
+// Bulb of a traffic signal, i.e. the individual traffic light.
+//
+// @relation 1 sensoris.protobuf.categories.intersectionattribution.TrafficSignal CONTAIN 1..* sensoris.protobuf.categories.intersectionattribution.TrafficSignalBulb
+message TrafficSignalBulb {
+  // Status and confidence.
+  //
+  // @example Traffic signal bulb has the status BLINKING with confidence 60 %.
+  message StatusAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Light is off.
+      OFF = 1;
+      // Light is on.
+      ON = 2;
+      // Light is blinking.
+      BLINKING = 3;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Color and confidence.
+  //
+  // @example Traffic signal bulb has the color RED with confidence 90 %.
+  message ColorAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Green.
+      GREEN = 1;
+      // Yellow.
+      YELLOW = 2;
+      // Red.
+      RED = 3;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Shape and confidence.
+  //
+  // @example Traffic signal bulb has the shape ARROW_STRAIGHT with confidence 70 %.
+  message ShapeAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // No shape, i.e. full bulb circle is illuminated when on.
+      CIRCLE = 1;
+      // Straight arrow.
+      ARROW_STRAIGHT = 2;
+      // Left arrow describing left turning only.
+      ARROW_LEFT = 3;
+      // Right arrow describing right turning only.
+      ARROW_RIGHT = 4;
+      // Straight and left arrow describing straight and left turning only.
+      ARROW_STRAIGHT_AND_LEFT = 5;
+      // Straight and right arrow describing straight and right turning only.
+      ARROW_STRAIGHT_AND_RIGHT = 6;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Confidence that a traffic signal bulb has been detected.
+  sensoris.protobuf.types.base.Confidence existence_confidence = 2;
+
+  // Position and accuracy of traffic signal bulb center.
+  sensoris.protobuf.types.spatial.PositionAndAccuracy position_and_accuracy = 3;
+
+  // Status and confidence.
+  StatusAndConfidence status_and_confidence = 4;
+
+  // Color and confidence.
+  ColorAndConfidence color_and_confidence = 5;
+
+  // Shape and confidence.
+  ShapeAndConfidence shape_and_confidence = 6;
+}
+
+// Traffic signal of one or more traffic lights for an intersection scenario. Traffic signals also might be part of no intersection, e.g. on pedestrian crossings.
+//
+// The geometry of a traffic signal is defined by a rectangular box and accuracy around the traffic signal.
+//
+// @relation 1 sensoris.protobuf.categories.intersectionattribution.TrafficSignal CONTAIN 1..* sensoris.protobuf.categories.intersectionattribution.TrafficSignalBulb
+// @relation 1..* sensoris.protobuf.categories.intersectionattribution.TrafficSignal EQUAL 1 sensoris.protobuf.categories.objectdetection.StaticObject
+message TrafficSignal {
+  // Orientation.
+  //
+  // @example Traffic signal has orientation VERTICAL with confidence 80 %.
+  message OrientationAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Other, i.e. none of the listed enum values.
+      OTHER = 1;
+      // Horizontal.
+      HORIZONTAL = 2;
+      // Vertical.
+      VERTICAL = 3;
+      // Mixed, i.e. both horizontal and vertical.
+      MIXED = 4;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Confidence that a traffic signal has been detected.
+  sensoris.protobuf.types.base.Confidence existence_confidence = 2;
+
+  // Event detection status.
+  sensoris.protobuf.types.base.EventDetectionStatus detection_status = 3;
+
+  // Rectangular box and accuracy.
+  sensoris.protobuf.types.spatial.RectangularBoxAndAccuracy rectangular_box_and_accuracy = 4;
+
+  // Number of bulbs and confidence.
+  //
+  // @example Traffic signal has three bulbs with confidence 90 %.
+  sensoris.protobuf.types.base.CountAndConfidence bulb_count_and_confidence = 5;
+
+  // Orientation and confidence.
+  OrientationAndConfidence orientation_and_confidence = 6;
+}
+
+// Intersection attribution category.
+message IntersectionAttributionCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Bulb of a traffic signal, i.e. the individual traffic light.
+  repeated TrafficSignalBulb traffic_signal_bulb = 2;
+
+  // Traffic signal of one or more traffic lights for an intersection scenario. Traffic signals also might be part of no intersection, e.g. on pedestrian crossings.
+  repeated TrafficSignal traffic_signal = 3;
+}

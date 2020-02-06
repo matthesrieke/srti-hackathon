@@ -1,0 +1,102 @@
+//
+// Copyright (c) 2017, 2019 SENSORIS Innovation Platform hosted by ERTICO - ITS Europe.
+//
+// This program and the accompanying materials are made available under the terms of the Creative Commons Attribution-NoDerivatives 4.0 International license which accompanies this distribution, and is available at https://creativecommons.org/licenses/by-nd/4.0/legalcode.
+//
+
+// Google Protocol Buffers Version 3.
+syntax = "proto3";
+
+// Package name.
+package sensoris.protobuf.categories.drivingbehavior;
+
+// Options for code generation.
+option cc_enable_arenas = true;
+option java_package = "org.sensoris.categories.drivingbehavior";
+option java_outer_classname = "SensorisDrivingBehaviorCategory";
+option java_multiple_files = true;
+
+// Import SENSORIS message types.
+import "sensoris/protobuf/types/base.proto";
+
+// Parking status describes parking in or parking out of a parking spot along with the parking direction and duration.
+//
+// The vehicle may also report additional information, if such information is available:
+// 1) the direction of parking (longitudinal, lateral, diagonal).
+// 2) the expected (for a park in event) or actual (for a park out event) duration. The duration may contain accuracy.
+//
+// The event may be related with an IMPACTS relation to TrafficSign events describing the parking regulations identified for the parking spot just occupied / vacated by the vehicle.
+//
+// The position of the parked vehicle is reported using one or more events VehiclePositionAndOrientation for which the ParkingStatus timestamp can be interpolated within the path of the positions. If the parking event is identified with a delay, then the original timestamp of the parking event shall be back-calculated. It is recommended to also report the vehicle heading.
+//
+// @relation 1..* sensoris.protobuf.categories.trafficregulation.TrafficSign IMPACT 1 sensoris.protobuf.categories.drivingbehavior.ParkingStatus
+// @relation 1 sensoris.protobuf.categories.drivingbehavior.ParkingStatus START_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+// @relation 1 sensoris.protobuf.categories.drivingbehavior.ParkingStatus END_AT 1 sensoris.protobuf.categories.localization.VehiclePositionAndOrientation
+message ParkingStatus {
+  // Status and confidence.
+  message StatusAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Vehicle parks in, i.e. vehicle occupies a parking spot.
+      PARK_IN = 1;
+      // Vehicle parks out, i.e. vehicle leaves a parking spot.
+      PARK_OUT = 2;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Direction and confidence.
+  message DirectionAndConfidence {
+    // Type.
+    enum Type {
+      // Unknown.
+      UNKNOWN_TYPE = 0;
+      // Vehicle is parked along the road.
+      LONGITUDINAL = 1;
+      // Vehicle is parked lateral to the road.
+      LATERAL = 2;
+      // Vehicle is parked diagonal to the road.
+      DIAGONAL = 3;
+    }
+
+    // Type.
+    Type type = 1;
+
+    // Confidence of type.
+    sensoris.protobuf.types.base.Confidence confidence = 2;
+  }
+
+  // Event envelope.
+  sensoris.protobuf.types.base.EventEnvelope envelope = 1;
+
+  // Status and confidence.
+  StatusAndConfidence status_and_confidence = 2;
+
+  // Direction and confidence.
+  DirectionAndConfidence direction_and_confidence = 3;
+
+  // Duration of parking in minutes:
+  // - for status PARK_IN the planned parking duration, e.g. based on time payed for parking.
+  // - for status PARK_OUT the actual duration since the vehicle parked in the location.
+  //
+  // @unit Minute
+  // @resolution 1
+  // @range (0, )
+  sensoris.protobuf.types.base.Int64ValueAndAccuracy duration_and_accuracy = 4 [(sensoris.protobuf.types.base.exponent) = 0];
+}
+
+// Driving behavior category.
+message DrivingBehaviorCategory {
+  // Envelope.
+  sensoris.protobuf.types.base.CategoryEnvelope envelope = 1;
+
+  // Parking status.
+  repeated ParkingStatus parking_status = 2;
+}
