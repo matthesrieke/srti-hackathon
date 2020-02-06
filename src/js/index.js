@@ -44,6 +44,111 @@ var outputIfDefined = function(obj, meaningfulProperties) {
 
 }
 
+var ingestSingleFile = function(fileame) {
+    fs.readFile(fileame, function(err, data) {
+        if (err) throw err;
+        
+        if (idx++ > 1) {
+            return;
+        }
+
+        var arrByte = Uint8Array.from(data);
+        
+        
+        
+        try {
+            var candidate = arrByte.slice(2);
+            var msg = proto.sensoris.protobuf.messages.data.DataMessages.deserializeBinary(candidate);
+            var list = msg.getDataMessageList();
+
+            list.forEach((dm) => {
+                var currentEvent = new SrtiEvent();
+
+                // console.log(dm.toObject());
+                outputIfDefined(dm.toObject(), meaningfulPropertiesDataMessage);
+
+                dm.getEventGroupList().forEach(eg => {
+                    outputIfDefined(eg.toObject(), meaningfulPropertiesEventGroup);
+
+                    eg.getLocalizationCategory().getVehiclePositionAndOrientationList().forEach(vpao => {
+                        outputIfDefined(vpao.toObject(), meaningfulPropertiesVehiclePositionAndOrientation);
+                        if (vpao.getEnvelope()) {
+                            outputIfDefined(vpao.getEnvelope().toObject(), meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
+                            currentEvent.time = vpao.getEnvelope().getTimestamp().getPosixTime().toObject().value;
+                        }
+                        
+
+                        // console.log('pos', vpao.getPositionAndAccuracy().toObject());
+                        outputIfDefined(vpao.getPositionAndAccuracy().toObject(), meaningfulPropertiesPositionAndAccuracy);
+
+                        // coords loat lon --> x/10^8
+                        var coords = vpao.getPositionAndAccuracy().getGeographicWgs84();
+                        var lon = coords.getLongitude() / (10 ** 8);
+                        var lat = coords.getLatitude() / (10 ** 8);
+                        currentEvent.location = {
+                            lat: lat,
+                            lon: lon
+                        };
+                        
+                        // console.log('currentEvent: ' + currentEvent);                            
+                    });
+
+                    // console.log(eg.getTrafficEventsCategory().toObject());
+                    if (eg.getTrafficEventsCategory()) {
+                        currentEvent.type = 'traffic';
+
+                        outputIfDefined(eg.getTrafficEventsCategory().toObject(), meaningfulPropertiesTrafficEventsCategory);
+
+                        eg.getTrafficEventsCategory().getDangerousSlowDownList().forEach(dsd => {
+                            currentEvent.subType = 'slowDown';
+                        });
+
+                        eg.getTrafficEventsCategory().getHazardList().forEach(h => {
+                            currentEvent.subType = 'hazard';
+                            // console.log('hazard', h.getEnvelope().toObject());
+                            if (h.getEnvelope().getExtensionList()) {
+                                h.getEnvelope().getExtensionList().forEach(ex => {
+                                    currentEvent.value = Buffer.from(ex.toObject().value.trim(), 'base64').toString('utf-8').trim();
+                                    currentEvent.value = currentEvent.value.replace(/[^A-Za-z 0-9 \.,\?""!@#\$%\^&\*\(\)-_=\+;:<>\/\\\|\}\{\[\]`~]*/g, '');
+                                });
+                            }
+                        });
+
+                    }
+
+                    if (eg.getWeatherCategory()) {
+                        currentEvent.type = 'weather';
+                    }
+
+                    if (!eg.getTrafficEventsCategory() && !eg.getWeatherCategory()) {
+                        currentEvent.type = 'unknown';
+                        console.log('what?', eg.toObject());
+                    }
+                    
+                });
+
+                resultingEvents.push(currentEvent);
+            });
+        }
+        catch (e) {
+            console.error(e);
+            return;
+        }          
+
+        if (++readyCount >= targetFileCount) {
+            console.log('meaningfulPropertiesDataMessage: ', meaningfulPropertiesDataMessage);
+            console.log('meaningfulPropertiesEventGroup: ', meaningfulPropertiesEventGroup);
+            console.log('meaningfulPropertiesVehiclePositionAndOrientation', meaningfulPropertiesVehiclePositionAndOrientation);
+            console.log('meaningfulPropertiesVehiclePositionAndOrientationEnvelope', meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
+            console.log('meaningfulPropertiesPositionAndAccuracy', meaningfulPropertiesPositionAndAccuracy);
+            console.log('meaningfulPropertiesTrafficEventsCategory', meaningfulPropertiesTrafficEventsCategory);
+            
+            ingest(resultingEvents);
+        }
+        
+    });
+}
+
 fs.readdir(baseDir, function (err, files) {
     //handling error
     if (err) {
@@ -65,108 +170,7 @@ fs.readdir(baseDir, function (err, files) {
     files.forEach(function (file) {
 
         var idx = 1;
-        fs.readFile(baseDir + file, function(err, data) {
-            if (err) throw err;
-            
-            if (idx++ > 1) {
-                return;
-            }
-
-            var arrByte = Uint8Array.from(data);
-            
-            
-            
-            try {
-                var candidate = arrByte.slice(2);
-                var msg = proto.sensoris.protobuf.messages.data.DataMessages.deserializeBinary(candidate);
-                var list = msg.getDataMessageList();
-
-                list.forEach((dm) => {
-                    var currentEvent = new SrtiEvent();
-
-                    // console.log(dm.toObject());
-                    outputIfDefined(dm.toObject(), meaningfulPropertiesDataMessage);
-
-                    dm.getEventGroupList().forEach(eg => {
-                        outputIfDefined(eg.toObject(), meaningfulPropertiesEventGroup);
-
-                        eg.getLocalizationCategory().getVehiclePositionAndOrientationList().forEach(vpao => {
-                            outputIfDefined(vpao.toObject(), meaningfulPropertiesVehiclePositionAndOrientation);
-                            if (vpao.getEnvelope()) {
-                                outputIfDefined(vpao.getEnvelope().toObject(), meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
-                                currentEvent.time = vpao.getEnvelope().getTimestamp().getPosixTime().toObject().value;
-                            }
-                            
-
-                            // console.log('pos', vpao.getPositionAndAccuracy().toObject());
-                            outputIfDefined(vpao.getPositionAndAccuracy().toObject(), meaningfulPropertiesPositionAndAccuracy);
-
-                            // coords loat lon --> x/10^8
-                            var coords = vpao.getPositionAndAccuracy().getGeographicWgs84();
-                            var lon = coords.getLongitude() / (10 ** 8);
-                            var lat = coords.getLatitude() / (10 ** 8);
-                            currentEvent.location = {
-                                lat: lat,
-                                lon: lon
-                            };
-                            
-                            // console.log('currentEvent: ' + currentEvent);                            
-                        });
-
-                        // console.log(eg.getTrafficEventsCategory().toObject());
-                        if (eg.getTrafficEventsCategory()) {
-                            currentEvent.type = 'traffic';
-
-                            outputIfDefined(eg.getTrafficEventsCategory().toObject(), meaningfulPropertiesTrafficEventsCategory);
-
-                            eg.getTrafficEventsCategory().getDangerousSlowDownList().forEach(dsd => {
-                                currentEvent.subType = 'slowDown';
-                            });
-
-                            eg.getTrafficEventsCategory().getHazardList().forEach(h => {
-                                currentEvent.subType = 'hazard';
-                                // console.log('hazard', h.getEnvelope().toObject());
-                                if (h.getEnvelope().getExtensionList()) {
-                                    h.getEnvelope().getExtensionList().forEach(ex => {
-                                        currentEvent.value = Buffer.from(ex.toObject().value.trim(), 'base64').toString('utf-8').trim();
-                                        currentEvent.value = currentEvent.value.replace(/[^A-Za-z 0-9 \.,\?""!@#\$%\^&\*\(\)-_=\+;:<>\/\\\|\}\{\[\]`~]*/g, '');
-                                    });
-                                }
-                            });
-
-                        }
-
-                        if (eg.getWeatherCategory()) {
-                            currentEvent.type = 'weather';
-                        }
-
-                        if (!eg.getTrafficEventsCategory() && !eg.getWeatherCategory()) {
-                            currentEvent.type = 'unknown';
-                            console.log('what?', eg.toObject());
-                        }
-                        
-                    });
-
-                    resultingEvents.push(currentEvent);
-                });
-            }
-            catch (e) {
-                console.error(e);
-                return;
-            }          
-
-            if (++readyCount >= targetFileCount) {
-                console.log('meaningfulPropertiesDataMessage: ', meaningfulPropertiesDataMessage);
-                console.log('meaningfulPropertiesEventGroup: ', meaningfulPropertiesEventGroup);
-                console.log('meaningfulPropertiesVehiclePositionAndOrientation', meaningfulPropertiesVehiclePositionAndOrientation);
-                console.log('meaningfulPropertiesVehiclePositionAndOrientationEnvelope', meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
-                console.log('meaningfulPropertiesPositionAndAccuracy', meaningfulPropertiesPositionAndAccuracy);
-                console.log('meaningfulPropertiesTrafficEventsCategory', meaningfulPropertiesTrafficEventsCategory);
-                
-                ingest(resultingEvents);
-            }
-            
-        });
+        ingestSingleFile(baseDir + file);
     });
 });
 
