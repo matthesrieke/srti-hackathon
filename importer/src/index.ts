@@ -1,6 +1,4 @@
 import fs from 'fs';
-import { ProjectParser } from './project-parser';
-import { ComponentParser } from './component-parser';
 import { default as rp } from 'request-promise-native';
 
 import * as eventsMapping from '../data/srti-mapping.json';
@@ -17,52 +15,7 @@ if (!args._) {
 }
 
 const ingest = () => {
-    fs.readdir('./data', (err, files) => {
-        if (err) {
-            console.error(err);
-        } else {
-            files.forEach(f => {
-                if (f.endsWith('projektsteckbrief.csv')) {
-                    const parser = new ProjectParser();
-                    parser.parseFromCsv('./data/' + f).then(projects => {
-                        projects.forEach(p => {
-                            let options = {
-                                method: 'PUT',
-                                uri: esUrl + '/projects/_doc/' + p.id,
-                                body: p,
-                                json: true // Automatically stringifies the body to JSON
-                            };
-                            
-                            rp(options).then(res => {
-                                console.log('document created:', res);
-                            }, err => {
-                                console.error(err);
-                            });
-                        });
-                    });
-                }
-                if (f.endsWith('komponentensteckbrief.csv')) {
-                    const parser = new ComponentParser();
-                    parser.parseFromCsv('./data/' + f).then(comps => {
-                        comps.forEach(c => {
-                            let options = {
-                                method: 'PUT',
-                                uri: esUrl + '/components/_doc/' + c.id,
-                                body: c,
-                                json: true // Automatically stringifies the body to JSON
-                            };
-                            
-                            rp(options).then(res => {
-                                console.log('component created:', res);
-                            }, err => {
-                                console.error(err);
-                            });
-                        });
-                    });
-                }
-            });
-        }
-    });
+
 };
 
 const setup = () => {

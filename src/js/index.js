@@ -3,9 +3,13 @@ var protoMessages = require('../../lib/sensoris/protobuf/messages/data_pb');
 var rp = require('request-promise-native');
 
 var fs = require('fs');
-var baseDir = './data/00/';
+var baseDir = './data/';
 
 const esUrl = 'http://localhost:9200';
+
+var chunkSize = 100000;
+var currentChunkCount = 0;
+var chunks = [];
 
 class SrtiEvent {
 
@@ -44,17 +48,15 @@ var outputIfDefined = function(obj, meaningfulProperties) {
 
 }
 
+var totalFiles = 0;
+var preparedFiles = 0;
+var payload = '';
+
 var ingestSingleFile = function(fileame) {
     fs.readFile(fileame, function(err, data) {
         if (err) throw err;
         
-        if (idx++ > 1) {
-            return;
-        }
-
         var arrByte = Uint8Array.from(data);
-        
-        
         
         try {
             var candidate = arrByte.slice(2);
@@ -65,21 +67,21 @@ var ingestSingleFile = function(fileame) {
                 var currentEvent = new SrtiEvent();
 
                 // console.log(dm.toObject());
-                outputIfDefined(dm.toObject(), meaningfulPropertiesDataMessage);
+                // outputIfDefined(dm.toObject(), meaningfulPropertiesDataMessage);
 
                 dm.getEventGroupList().forEach(eg => {
-                    outputIfDefined(eg.toObject(), meaningfulPropertiesEventGroup);
+                    // outputIfDefined(eg.toObject(), meaningfulPropertiesEventGroup);
 
                     eg.getLocalizationCategory().getVehiclePositionAndOrientationList().forEach(vpao => {
-                        outputIfDefined(vpao.toObject(), meaningfulPropertiesVehiclePositionAndOrientation);
+                        // outputIfDefined(vpao.toObject(), meaningfulPropertiesVehiclePositionAndOrientation);
                         if (vpao.getEnvelope()) {
-                            outputIfDefined(vpao.getEnvelope().toObject(), meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
-                            currentEvent.time = vpao.getEnvelope().getTimestamp().getPosixTime().toObject().value;
+                            // outputIfDefined(vpao.getEnvelope().toObject(), meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
+                            var unixTime = vpao.getEnvelope().getTimestamp().getPosixTime().toObject().value;
+                            currentEvent.time = new Date(unixTime);
                         }
-                        
 
                         // console.log('pos', vpao.getPositionAndAccuracy().toObject());
-                        outputIfDefined(vpao.getPositionAndAccuracy().toObject(), meaningfulPropertiesPositionAndAccuracy);
+                        // outputIfDefined(vpao.getPositionAndAccuracy().toObject(), meaningfulPropertiesPositionAndAccuracy);
 
                         // coords loat lon --> x/10^8
                         var coords = vpao.getPositionAndAccuracy().getGeographicWgs84();
@@ -97,7 +99,7 @@ var ingestSingleFile = function(fileame) {
                     if (eg.getTrafficEventsCategory()) {
                         currentEvent.type = 'traffic';
 
-                        outputIfDefined(eg.getTrafficEventsCategory().toObject(), meaningfulPropertiesTrafficEventsCategory);
+                        // outputIfDefined(eg.getTrafficEventsCategory().toObject(), meaningfulPropertiesTrafficEventsCategory);
 
                         eg.getTrafficEventsCategory().getDangerousSlowDownList().forEach(dsd => {
                             currentEvent.subType = 'slowDown';
@@ -127,68 +129,76 @@ var ingestSingleFile = function(fileame) {
                     
                 });
 
-                resultingEvents.push(currentEvent);
+                
+                payload += ingest(currentEvent);
+
+                if (++currentChunkCount > chunkSize) {
+                    chunks.push(payload);
+                    payload = '';
+                }
+
+                if (++preparedFiles >= totalFiles) {
+                    if (currentChunkCount > 0) {
+                        chunks.push(payload);
+                    }
+                    console.log('total chunks:', chunks.length);
+                    indexToElasticsearch(chunks);
+                }
             });
         }
         catch (e) {
-            console.error(e);
+            console.error('could not parse: ', fileame);
+            ++preparedFiles;
             return;
-        }          
-
-        if (++readyCount >= targetFileCount) {
-            console.log('meaningfulPropertiesDataMessage: ', meaningfulPropertiesDataMessage);
-            console.log('meaningfulPropertiesEventGroup: ', meaningfulPropertiesEventGroup);
-            console.log('meaningfulPropertiesVehiclePositionAndOrientation', meaningfulPropertiesVehiclePositionAndOrientation);
-            console.log('meaningfulPropertiesVehiclePositionAndOrientationEnvelope', meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
-            console.log('meaningfulPropertiesPositionAndAccuracy', meaningfulPropertiesPositionAndAccuracy);
-            console.log('meaningfulPropertiesTrafficEventsCategory', meaningfulPropertiesTrafficEventsCategory);
-            
-            ingest(resultingEvents);
         }
         
     });
 }
 
-fs.readdir(baseDir, function (err, files) {
-    //handling error
-    if (err) {
-        return console.log('Unable to scan directory: ' + err);
-    } 
-
-    var meaningfulPropertiesDataMessage = [];
-    var meaningfulPropertiesEventGroup = [];
-    var meaningfulPropertiesVehiclePositionAndOrientation = [];
-    var meaningfulPropertiesVehiclePositionAndOrientationEnvelope = [];
-    var meaningfulPropertiesPositionAndAccuracy = [];
-    var meaningfulPropertiesTrafficEventsCategory = [];
-
-    var targetFileCount = files.length;
-    var readyCount = 0;
-
-    var resultingEvents = [];
-
-    files.forEach(function (file) {
-
-        var idx = 1;
-        ingestSingleFile(baseDir + file);
+var walk = function(dir) {
+    var results = [];
+    var list = fs.readdirSync(dir);
+    list.forEach(function(file) {
+        file = dir + '/' + file;
+        var stat = fs.statSync(file);
+        if (stat && stat.isDirectory()) { 
+            /* Recurse into a subdirectory */
+            results = results.concat(walk(file));
+        } else { 
+            /* Is a file */
+            results.push(file);
+        }
     });
+    return results;
+}
+
+var dataFiles = walk(baseDir);
+console.log('dataFiles count', dataFiles.length);
+totalFiles = dataFiles.length;
+dataFiles.forEach(f => {
+    ingestSingleFile(f); 
 });
 
+var ingest = function (eventToIngest) {
+    var result = '{ "index" : { "_index" : "events", "_type" : "_doc" } }\n';
+    result += JSON.stringify(eventToIngest);
+    result += '\n';
+    return result;
+}
 
-var ingest = function (eventsToIngest) {
-    console.log('EVENTS', JSON.stringify(eventsToIngest, null, 4));
-    eventsToIngest.forEach(p => {
-        let options = {
-            method: 'POST',
-            uri: esUrl + '/events/_doc',
-            body: p,
-            json: true // Automatically stringifies the body to JSON
-        };
-        
-        rp(options).then(res => {
-            console.log('document created:', res);
-        }, err => {
-            console.error(err);
-        });
+var indexToElasticsearch = function (chunkPayloads) {
+    let options = {
+        method: 'POST',
+        uri: esUrl + '/_bulk',
+        body: chunkPayloads[0],
+        headers: {
+            "Content-Type": "application/x-ndjson"
+        }
+    };
+    
+    rp(options).then(res => {
+        console.log('data ingested:', res);
+    }, err => {
+        console.error(err);
     });
 }
