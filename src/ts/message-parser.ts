@@ -6,8 +6,9 @@ const sensorisMessages = sensorisMessagesImport as any;
 
 export class SrtiEvent {
 
-    location: any;
-    time: Date;
+    geometry: any;
+    timeStart: Date;
+    timeEnd: Date;
     type: string;
     subType: string;
     value: any;
@@ -21,8 +22,9 @@ export class MessageParser {
     private chunkSize = 100000;
     private currentChunkCount = 0;
     private chunks = [];
+    private deltaTimes = 0;
 
-    private baseDir = './data/';
+    private baseDir = './data';
     private esUrl = 'http://localhost:9200';
         
 
@@ -50,18 +52,36 @@ export class MessageParser {
                 list.forEach(dm => {
                     var currentEvent = new SrtiEvent();
     
-                    // console.log(dm.toObject());
+                   
                     // outputIfDefined(dm.toObject(), meaningfulPropertiesDataMessage);
     
                     dm.getEventGroupList().forEach(eg => {
                         // outputIfDefined(eg.toObject(), meaningfulPropertiesEventGroup);
-    
+
+                        const coordsList = [];
+                        let startTime = 0;
+                        let endTime = 0;
+                        
                         eg.getLocalizationCategory().getVehiclePositionAndOrientationList().forEach(vpao => {
+                            // console.log('pos', vpao.getOrientationAndAccuracy().toObject());
                             // outputIfDefined(vpao.toObject(), meaningfulPropertiesVehiclePositionAndOrientation);
                             if (vpao.getEnvelope()) {
                                 // outputIfDefined(vpao.getEnvelope().toObject(), meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
                                 var unixTime = vpao.getEnvelope().getTimestamp().getPosixTime().toObject().value;
-                                currentEvent.time = new Date(unixTime);
+
+                                if (this.deltaTimes <10) {
+                                    console.log(unixTime);
+                                }
+                                if (startTime === 0) {
+                                    // first time value, use it for both
+                                    startTime = unixTime;
+                                    endTime = unixTime;
+                                } else if (startTime > unixTime) {
+                                    startTime = unixTime;
+                                } else if (endTime < unixTime) {
+                                    endTime = unixTime;
+                                }
+                                
                             }
     
                             // console.log('pos', vpao.getPositionAndAccuracy().toObject());
@@ -71,14 +91,24 @@ export class MessageParser {
                             var coords = vpao.getPositionAndAccuracy().getGeographicWgs84();
                             var lon = coords.getLongitude() / (10 ** 8);
                             var lat = coords.getLatitude() / (10 ** 8);
-                            currentEvent.location = {
-                                lat: lat,
-                                lon: lon
-                            };
+                            coordsList.push([lon, lat]);
+                            
                             
                             // console.log('currentEvent: ' + currentEvent);                            
                         });
-    
+
+                        currentEvent.geometry = {
+                            type : 'LineString',
+                            coordinates : coordsList
+                        };
+
+                        if (startTime === endTime) {
+                            this.deltaTimes++;
+                        }
+
+                        currentEvent.timeStart = new Date(startTime);
+                        currentEvent.timeEnd = new Date(endTime);
+
                         // console.log(eg.getTrafficEventsCategory().toObject());
                         if (eg.getTrafficEventsCategory()) {
                             currentEvent.type = 'traffic';
@@ -188,6 +218,7 @@ export class MessageParser {
     }
     
     private indexToElasticsearch(chunkPayloads: string[]) {
+        console.log('events with time detla', this.deltaTimes);
         let options = {
             method: 'POST',
             uri: this.esUrl + '/_bulk',
@@ -200,7 +231,7 @@ export class MessageParser {
         rp(options).then(res => {
             console.log('data ingested!');
         }, err => {
-            console.error(err);
+            console.error('could not ingest data');
         });
     }
 }

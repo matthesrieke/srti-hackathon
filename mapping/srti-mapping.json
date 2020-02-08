@@ -5,9 +5,11 @@
     "mappings" : {
         "_doc" : {
             "properties" : {
-                "timestamp" : { "type" : "date" },
-                "location": {
-                    "type": "geo_point"
+                "timeStart" : { "type" : "date" },
+                "timeEnd" : { "type" : "date" },
+                "geometry": {
+                    "type": "geo_shape",
+                    "precision": "10m"
                 },
                 "type" : { "type" : "keyword" },
                 "subType" : { "type" : "keyword" },
