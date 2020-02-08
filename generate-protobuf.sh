@@ -1,3 +1,3 @@
 #!/bin/sh
 
-protoc  --proto_path=src --js_out=import_style=commonjs,binary:lib src/sensoris/protobuf/categories/* src/sensoris/protobuf/messages/* src/sensoris/protobuf/types/*
+protoc  --proto_path=src --js_out=import_style=commonjs,binary:lib src/proto/sensoris/protobuf/categories/* src/proto/sensoris/protobuf/messages/* src/proto/sensoris/protobuf/types/*
