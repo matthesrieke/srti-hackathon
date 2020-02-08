@@ -3,3 +3,4 @@ node_modules
 *.tgz
 data/**
 dist
+*.exfat.zip
