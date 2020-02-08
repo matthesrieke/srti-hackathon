@@ -5,8 +5,11 @@
       "esModuleInterop": true,
       "moduleResolution": "node",
       "target": "es6",
+      "allowJs": true,
       "sourceMap": true,
       "outDir": "dist"
     },
-    "lib": ["es2015"]
+    "lib": ["es2015"],
+    "include": ["src/ts/*", "src/js/*"],
+    "exclude": ["node_modules", "**/*.spec.ts"]
   }

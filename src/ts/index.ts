@@ -1,9 +1,10 @@
 import fs from 'fs';
 import { default as rp } from 'request-promise-native';
 
-import * as eventsMapping from '../data/srti-mapping.json';
+import * as eventsMapping from '../../mapping/srti-mapping.json';
 
 import { default as minimist } from 'minimist';
+import { MessageParser } from './message-parser';
 
 const args = minimist(process.argv.slice(2));
 // const esUrl = esUrl + '';
@@ -15,7 +16,7 @@ if (!args._) {
 }
 
 const ingest = () => {
-
+    new MessageParser().startIngestion();
 };
 
 const setup = () => {
