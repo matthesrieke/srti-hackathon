@@ -6,11 +6,13 @@ const sensorisMessages = sensorisMessagesImport as any;
 
 export class SrtiEvent {
 
+    created: Date;
+    location: any;
     geometry: any;
     timeStart: Date;
     timeEnd: Date;
     type: string;
-    subType: string;
+    subType: string[];
     value: any;
 
 }
@@ -26,9 +28,11 @@ export class MessageParser {
 
     private baseDir = './data';
     private esUrl = 'http://localhost:9200';
+    created: Date;
         
 
     public startIngestion() {
+        this.created = new Date();
         var dataFiles = this.walk(this.baseDir);
         console.log('dataFiles count', dataFiles.length);
         this.totalFiles = dataFiles.length;
@@ -51,6 +55,8 @@ export class MessageParser {
     
                 list.forEach(dm => {
                     var currentEvent = new SrtiEvent();
+                    currentEvent.subType = [];
+                    currentEvent.created = this.created;
     
                    
                     // outputIfDefined(dm.toObject(), meaningfulPropertiesDataMessage);
@@ -61,6 +67,10 @@ export class MessageParser {
                         const coordsList = [];
                         let startTime = 0;
                         let endTime = 0;
+
+                        if (eg.getLocalizationCategory().getVehicleOdometryList() && eg.getLocalizationCategory().getVehicleOdometryList().length > 0) {
+                            console.log('odo', eg.getLocalizationCategory().getVehicleOdometryList());
+                        }
                         
                         eg.getLocalizationCategory().getVehiclePositionAndOrientationList().forEach(vpao => {
                             // console.log('pos', vpao.getOrientationAndAccuracy().toObject());
@@ -69,9 +79,6 @@ export class MessageParser {
                                 // outputIfDefined(vpao.getEnvelope().toObject(), meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
                                 var unixTime = vpao.getEnvelope().getTimestamp().getPosixTime().toObject().value;
 
-                                if (this.deltaTimes <10) {
-                                    console.log(unixTime);
-                                }
                                 if (startTime === 0) {
                                     // first time value, use it for both
                                     startTime = unixTime;
@@ -81,6 +88,8 @@ export class MessageParser {
                                 } else if (endTime < unixTime) {
                                     endTime = unixTime;
                                 }
+                                this.deltaTimes++;
+                            } else {
                                 
                             }
     
@@ -102,9 +111,10 @@ export class MessageParser {
                             coordinates : coordsList
                         };
 
-                        if (startTime === endTime) {
-                            this.deltaTimes++;
-                        }
+                        currentEvent.location = {
+                            lat: coordsList[0][1],
+                            lon: coordsList[0][0],
+                        };
 
                         currentEvent.timeStart = new Date(startTime);
                         currentEvent.timeEnd = new Date(endTime);
@@ -113,20 +123,29 @@ export class MessageParser {
                         if (eg.getTrafficEventsCategory()) {
                             currentEvent.type = 'traffic';
     
-                            // outputIfDefined(eg.getTrafficEventsCategory().toObject(), meaningfulPropertiesTrafficEventsCategory);
-    
                             eg.getTrafficEventsCategory().getDangerousSlowDownList().forEach(dsd => {
-                                currentEvent.subType = 'slowDown';
+                                currentEvent.subType.push('DangerousSlowDown');
+                            });
+
+                            eg.getTrafficEventsCategory().getTrafficConditionList().forEach(tc => {
+                                currentEvent.subType.push('TrafficCondition');
+                            });
+                            
+                            eg.getTrafficEventsCategory().getRoadworksList().forEach(rw => {
+                                currentEvent.subType.push('Roadworks');
+                            });
+
+                            eg.getTrafficEventsCategory().getRoadWeatherConditionList().forEach(rwc => {
+                                currentEvent.subType.push('RoadWeatherCondition');
                             });
     
                             eg.getTrafficEventsCategory().getHazardList().forEach(h => {
-                                currentEvent.subType = 'hazard';
+                                currentEvent.subType.push('Hazard');
                                 // console.log('hazard', h.getEnvelope().toObject());
-                                if (h.getEnvelope().getExtensionList()) {
-                                    h.getEnvelope().getExtensionList().forEach(ex => {
-                                        currentEvent.value = Buffer.from(ex.toObject().value.trim(), 'base64').toString('utf-8').trim();
-                                        currentEvent.value = currentEvent.value.replace(/[^A-Za-z 0-9 \.,\?""!@#\$%\^&\*\(\)-_=\+;:<>\/\\\|\}\{\[\]`~]*/g, '');
-                                    });
+                                if (h.getEnvelope()) {
+                                    // h.getEnvelope().getExtensionList().forEach(ex => {
+                                    //     currentEvent.value = this.fromBase64String(ex.toObject().value);
+                                    // });
                                 }
                             });
     
@@ -134,9 +153,22 @@ export class MessageParser {
     
                         if (eg.getWeatherCategory()) {
                             currentEvent.type = 'weather';
+
+                            if (eg.getWeatherCategory().getEnvelope()) {
+                                console.log('env', eg.getWeatherCategory().getEnvelope().toObject());
+                            }
+
+                            eg.getWeatherCategory().getPrecipitationList().forEach(p => {
+                                currentEvent.subType.push('precipitation');
+                                if (p.getEnvelope()) {
+                                    // p.getEnvelope().getExtensionList().forEach(ex => {
+                                    //     currentEvent.value = this.fromBase64String(ex.toObject().value);
+                                    // });
+                                }
+                            });
                         }
     
-                        if (!eg.getTrafficEventsCategory() && !eg.getWeatherCategory()) {
+                        if (!currentEvent.type) {
                             currentEvent.type = 'unknown';
                             console.log('what?', eg.toObject());
                         }
@@ -168,6 +200,12 @@ export class MessageParser {
             }
             
         });
+    }
+
+    private fromBase64String(value: any): any {
+        let result = Buffer.from(value.trim(), 'base64').toString('utf-8').trim();
+        result = result.replace(/[^A-Za-z 0-9 \.,\?""!@#\$%\^&\*\(\)-_=\+;:<>\/\\\|\}\{\[\]`~]*/g, '');
+        return result;
     }
 
     private addToArray(prop: any, arr: any[]) {

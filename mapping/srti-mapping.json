@@ -5,8 +5,12 @@
     "mappings" : {
         "_doc" : {
             "properties" : {
+                "created" : { "type" : "date" },
                 "timeStart" : { "type" : "date" },
                 "timeEnd" : { "type" : "date" },
+                "location": {
+                    "type": "geo_point"
+                },
                 "geometry": {
                     "type": "geo_shape",
                     "precision": "10m"
