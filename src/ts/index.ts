@@ -1,11 +1,10 @@
-import fs from 'fs';
 import { default as rp } from 'request-promise-native';
 
 import * as eventsMapping from '../../mapping/srti-mapping.json';
 import * as settings from '../../settings.json';
 
 import { default as minimist } from 'minimist';
-import { DataIngester } from './data-ingester.js';
+import { DataIngester } from './data-ingester';
 
 const args = minimist(process.argv.slice(2));
 

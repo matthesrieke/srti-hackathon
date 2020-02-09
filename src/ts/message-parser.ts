@@ -26,13 +26,22 @@ export class MessageParser {
     private currentChunkCount = 0;
     private chunks = [];
     private deltaTimes = 0;
+    finishedCallback: any;
+    finished: boolean;
 
-    constructor(private esUrl: string, private created: Date) {
+
+    constructor(private esUrl: string, private created: Date, private dataFiles: string[]) {
     }
 
-    public ingestDataFiles(dataFiles: string[]) {
-        this.totalFiles = dataFiles.length;
-        dataFiles.forEach(df => this.ingestSingleFile(df));
+    public ingestDataFiles(callback: any) {
+        if (this.finished) {
+            callback();
+        }
+        this.finishedCallback = callback;
+        this.totalFiles = this.dataFiles.length;
+        console.log('ingesting files. count', this.totalFiles);
+
+        this.dataFiles.forEach(df => this.ingestSingleFile(df));
     }
 
 
@@ -178,21 +187,20 @@ export class MessageParser {
                         this.payload = '';
                         this.currentChunkCount = 0;
                     }
-
-                    if (++this.preparedFiles >= this.totalFiles) {
-                        // last file has been processed
-                        if (this.currentChunkCount > 0) {
-                            this.chunks.push(this.payload);
-                        }
-                        console.log('total chunks:', this.chunks.length);
-                        this.indexToElasticsearch(this.chunks);
-                    }
                 });
             }
             catch (e) {
                 console.error('could not parse: ', filename);
-                ++this.preparedFiles;
-                return;
+            }
+            finally {
+                if (++this.preparedFiles >= this.totalFiles) {
+                    // last file has been processed
+                    if (this.currentChunkCount > 0) {
+                        this.chunks.push(this.payload);
+                    }
+                    console.log('total chunks:', this.chunks.length);
+                    this.indexToElasticsearch(this.chunks);
+                }
             }
 
         });
@@ -248,6 +256,8 @@ export class MessageParser {
 
             rp(options).then(res => {
                 console.log('data ingested!');
+                this.finished = true;
+                this.finishedCallback();
             }, err => {
                 console.error('could not ingest data');
             });

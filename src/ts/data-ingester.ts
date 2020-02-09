@@ -6,6 +6,7 @@ import { MessageParser } from './message-parser';
 export class DataIngester {
 
     created: Date;
+    pendingParser : MessageParser[] = [];
 
     constructor(private baseDir: string, private esUrl: string) {
     }
@@ -16,8 +17,12 @@ export class DataIngester {
             console.log('leaf data dir count', dataDirs.length);
             dataDirs.forEach(dd => {
                 this.walkAsync(dd).then((dataFiles: any[]) => {
-                    const parser = new MessageParser(this.esUrl, this.created);
-                    parser.ingestDataFiles(dataFiles);
+                    console.log('preaparing data file parsing. count', dataFiles.length);
+                    const parser = new MessageParser(this.esUrl, this.created, dataFiles);
+                    this.pendingParser.push(parser);
+                    if (this.pendingParser.length === 1) {
+                        parser.ingestDataFiles(() => this.callNextParser());
+                    }
                 }).catch(err => {
                     console.warn('could not read leaf directory', err);
                 });
@@ -27,7 +32,12 @@ export class DataIngester {
         });
     }
 
-
+    private callNextParser() {
+        console.log('remaining parsers', this.pendingParser.length);
+        if (this.pendingParser.length) {
+            this.pendingParser.pop().ingestDataFiles(() => this.callNextParser());
+        }
+    }
 
     private walk(dir: string) {
         var results = [];
@@ -52,31 +62,26 @@ export class DataIngester {
                 if (error) {
                     return reject(error);
                 }
-                console.log('file count', dir, files.length);
-                Promise.all(files.map((file) => {
-                    return new Promise((resolve, reject) => {
-                        const filepath = path.join(dir, file);
-
-                        if (file.indexOf('.proto') < 0) {
-                            if (onlyLeafDirs) {
-                                const l = fs.readdirSync(filepath)
-                                    .filter(d => d.indexOf('.proto') > 0).length;
-                                if (l > 0) {
-                                    console.log('got leaf dir', filepath);
-                                    resolve(filepath);
-                                } else {
-                                    this.walkAsync(filepath).then(resolve);
-                                }
+                
+                if (onlyLeafDirs && files.filter(d => d.indexOf('.proto') > 0).length > 0) {
+                    console.log('got leaf dir', dir);
+                    resolve(dir);
+                } else {
+                    Promise.all(files.map((file) => {
+                        return new Promise((resolve, reject) => {
+                            const filepath = path.join(dir, file);
+    
+                            if (file.indexOf('.proto') < 0) {
+                                this.walkAsync(filepath, onlyLeafDirs).then(resolve);
                             } else {
-                                this.walkAsync(filepath).then(resolve);
+                                resolve(filepath);
                             }
-                        } else {
-                            resolve(filepath);
-                        }
+                        });
+                    })).then((foldersContents) => {
+                        resolve(foldersContents.reduce((all: any, folderContents) => all.concat(folderContents), []));
                     });
-                })).then((foldersContents) => {
-                    resolve(foldersContents.reduce((all: any, folderContents) => all.concat(folderContents), []));
-                });
+                }
+
             });
         });
     }
