@@ -17,7 +17,9 @@
                 },
                 "type" : { "type" : "keyword" },
                 "subType" : { "type" : "keyword" },
-                "value" : { "type" : "object" }
+                "numericalValue" : { "type" : "double" },
+                "categoricalValue" : { "type" : "keyword" },
+                "valueUom" : { "type" : "keyword" }
             }
         }
     }

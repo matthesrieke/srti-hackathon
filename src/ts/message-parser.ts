@@ -2,11 +2,13 @@ import { goog } from 'google-protobuf';
 import * as sensorisMessagesImport from '../js/sensoris/protobuf/messages/data_pb';
 import { default as rp } from 'request-promise-native';
 import * as fs from 'fs';
+import { Limit } from 'p-limit';
 
 const sensorisMessages = sensorisMessagesImport as any;
 
 export class SrtiEvent {
 
+    _id: string;
     created: Date;
     location: any;
     geometry: any;
@@ -14,11 +16,14 @@ export class SrtiEvent {
     timeEnd: Date;
     type: string;
     subType: string[];
-    value: any;
+    numericalValue: number;
+    categoricalValue: string;
+    valueUom: string;
 
 }
 
 export class MessageParser {
+
     private totalFiles = 0;
     private preparedFiles = 0;
     private payload = '';
@@ -30,179 +35,185 @@ export class MessageParser {
     finished: boolean;
 
 
-    constructor(private esUrl: string, private created: Date, private dataFiles: string[]) {
+    constructor(private esUrl: string, private created: Date, private dataFiles: string[], private directory: string) {
     }
 
-    public ingestDataFiles(callback: any) {
-        if (this.finished) {
-            callback();
-        }
-        this.finishedCallback = callback;
+    getDirectory(): string {
+        return this.directory;
+    }
+
+    public ingestDataFiles() {
+        console.log('[DEBUG] starting ingestion for dir', this.directory);
+
         this.totalFiles = this.dataFiles.length;
-        console.log('ingesting files. count', this.totalFiles);
+        console.log('[DEBUG] ingesting files. count', this.totalFiles);
 
-        this.dataFiles.forEach(df => this.ingestSingleFile(df));
+        return Promise.all(this.dataFiles.map(df => {
+            return this.ingestSingleFile(df);
+        }));
     }
-
 
     private ingestSingleFile(filename: string) {
-        fs.readFile(filename, (err, data) => {
-            if (err) throw err;
-
-            var arrByte = Uint8Array.from(data);
-
-            try {
-                var candidate = arrByte.slice(2);
-                var msg = sensorisMessages.DataMessages.deserializeBinary(candidate);
-
-                var list = msg.getDataMessageList();
-
-                list.forEach(dm => {
-                    var currentEvent = new SrtiEvent();
-                    currentEvent.subType = [];
-                    currentEvent.created = this.created;
-
-
-                    // outputIfDefined(dm.toObject(), meaningfulPropertiesDataMessage);
-
-                    dm.getEventGroupList().forEach(eg => {
-                        // outputIfDefined(eg.toObject(), meaningfulPropertiesEventGroup);
-
-                        const coordsList = [];
-                        let startTime = 0;
-                        let endTime = 0;
-
-                        if (eg.getLocalizationCategory().getVehicleOdometryList() && eg.getLocalizationCategory().getVehicleOdometryList().length > 0) {
-                            console.log('odo', eg.getLocalizationCategory().getVehicleOdometryList());
-                        }
-
-                        eg.getLocalizationCategory().getVehiclePositionAndOrientationList().forEach(vpao => {
-                            // console.log('pos', vpao.getOrientationAndAccuracy().toObject());
-                            // outputIfDefined(vpao.toObject(), meaningfulPropertiesVehiclePositionAndOrientation);
-                            if (vpao.getEnvelope()) {
-                                // outputIfDefined(vpao.getEnvelope().toObject(), meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
-                                var unixTime = vpao.getEnvelope().getTimestamp().getPosixTime().toObject().value;
-
-                                if (startTime === 0) {
-                                    // first time value, use it for both
-                                    startTime = unixTime;
-                                    endTime = unixTime;
-                                } else if (startTime > unixTime) {
-                                    startTime = unixTime;
-                                } else if (endTime < unixTime) {
-                                    endTime = unixTime;
-                                }
-                                this.deltaTimes++;
-                            } else {
-
+        return new Promise((resolve, reject) => {
+            fs.readFile(filename, (err, data) => {
+                try {
+                    if (err) {
+                        throw err;
+                    }
+    
+                    var arrByte = Uint8Array.from(data);
+                    var candidate = arrByte.slice(2);
+                    var msg = sensorisMessages.DataMessages.deserializeBinary(candidate);
+    
+                    var list = msg.getDataMessageList();
+    
+                    list.forEach(dm => {
+                        var currentEvent = new SrtiEvent();
+                        currentEvent.subType = [];
+                        currentEvent.created = this.created;
+    
+    
+                        // outputIfDefined(dm.toObject(), meaningfulPropertiesDataMessage);
+    
+                        dm.getEventGroupList().forEach(eg => {
+                            // outputIfDefined(eg.toObject(), meaningfulPropertiesEventGroup);
+    
+                            const coordsList = [];
+                            let startTime = 0;
+                            let endTime = 0;
+    
+                            if (eg.getLocalizationCategory().getVehicleOdometryList() && eg.getLocalizationCategory().getVehicleOdometryList().length > 0) {
+                                console.log('odo', eg.getLocalizationCategory().getVehicleOdometryList());
                             }
-
-                            // console.log('pos', vpao.getPositionAndAccuracy().toObject());
-                            // outputIfDefined(vpao.getPositionAndAccuracy().toObject(), meaningfulPropertiesPositionAndAccuracy);
-
-                            // coords loat lon --> x/10^8
-                            var coords = vpao.getPositionAndAccuracy().getGeographicWgs84();
-                            var lon = coords.getLongitude() / (10 ** 8);
-                            var lat = coords.getLatitude() / (10 ** 8);
-                            coordsList.push([lon, lat]);
-
-
-                            // console.log('currentEvent: ' + currentEvent);                            
+    
+                            eg.getLocalizationCategory().getVehiclePositionAndOrientationList().forEach(vpao => {
+                                // console.log('pos', vpao.getOrientationAndAccuracy().toObject());
+                                // outputIfDefined(vpao.toObject(), meaningfulPropertiesVehiclePositionAndOrientation);
+                                if (vpao.getEnvelope()) {
+                                    // outputIfDefined(vpao.getEnvelope().toObject(), meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
+                                    var unixTime = vpao.getEnvelope().getTimestamp().getPosixTime().toObject().value;
+    
+                                    if (startTime === 0) {
+                                        // first time value, use it for both
+                                        startTime = unixTime;
+                                        endTime = unixTime;
+                                    } else if (startTime > unixTime) {
+                                        startTime = unixTime;
+                                    } else if (endTime < unixTime) {
+                                        endTime = unixTime;
+                                    }
+                                    this.deltaTimes++;
+                                } else {
+    
+                                }
+    
+                                // console.log('pos', vpao.getPositionAndAccuracy().toObject());
+                                // outputIfDefined(vpao.getPositionAndAccuracy().toObject(), meaningfulPropertiesPositionAndAccuracy);
+    
+                                // coords loat lon --> x/10^8
+                                var coords = vpao.getPositionAndAccuracy().getGeographicWgs84();
+                                var lon = coords.getLongitude() / (10 ** 8);
+                                var lat = coords.getLatitude() / (10 ** 8);
+                                coordsList.push([lon, lat]);
+    
+    
+                                // console.log('currentEvent: ' + currentEvent);                            
+                            });
+    
+                            currentEvent.geometry = {
+                                type: 'LineString',
+                                coordinates: coordsList
+                            };
+    
+                            currentEvent.location = {
+                                lat: coordsList[0][1],
+                                lon: coordsList[0][0],
+                            };
+    
+                            currentEvent.timeStart = new Date(startTime);
+                            currentEvent.timeEnd = new Date(endTime);
+    
+                            // console.log(eg.getTrafficEventsCategory().toObject());
+                            if (eg.getTrafficEventsCategory()) {
+                                currentEvent.type = 'traffic';
+    
+                                eg.getTrafficEventsCategory().getDangerousSlowDownList().forEach(dsd => {
+                                    currentEvent.subType.push('DangerousSlowDown');
+                                });
+    
+                                eg.getTrafficEventsCategory().getTrafficConditionList().forEach(tc => {
+                                    currentEvent.subType.push('TrafficCondition');
+                                });
+    
+                                eg.getTrafficEventsCategory().getRoadworksList().forEach(rw => {
+                                    currentEvent.subType.push('Roadworks');
+                                });
+    
+                                eg.getTrafficEventsCategory().getRoadWeatherConditionList().forEach(rwc => {
+                                    currentEvent.subType.push('RoadWeatherCondition');
+                                });
+    
+                                eg.getTrafficEventsCategory().getHazardList().forEach(h => {
+                                    currentEvent.subType.push('Hazard');
+                                    // console.log('hazard', h.getEnvelope().toObject());
+                                    if (h.getEnvelope()) {
+                                        h.getEnvelope().getExtensionList().forEach(ex => {
+                                            currentEvent.categoricalValue = this.fromBase64String(ex.toObject().value);
+                                        });
+                                    }
+                                });
+    
+                            }
+    
+                            if (eg.getWeatherCategory()) {
+                                currentEvent.type = 'weather';
+    
+                                if (eg.getWeatherCategory().getEnvelope()) {
+                                    console.log('env', eg.getWeatherCategory().getEnvelope().toObject());
+                                }
+    
+                                eg.getWeatherCategory().getPrecipitationList().forEach(p => {
+                                    currentEvent.subType.push('precipitation');
+                                    if (p.getEnvelope()) {
+                                        p.getEnvelope().getExtensionList().forEach(ex => {
+                                            currentEvent.categoricalValue = this.fromBase64String(ex.toObject().value);
+                                        });
+                                    }
+                                });
+                            }
+    
+                            if (!currentEvent.type) {
+                                currentEvent.type = 'unknown';
+                                console.log('what?', eg.toObject());
+                            }
+    
                         });
-
-                        currentEvent.geometry = {
-                            type: 'LineString',
-                            coordinates: coordsList
-                        };
-
-                        currentEvent.location = {
-                            lat: coordsList[0][1],
-                            lon: coordsList[0][0],
-                        };
-
-                        currentEvent.timeStart = new Date(startTime);
-                        currentEvent.timeEnd = new Date(endTime);
-
-                        // console.log(eg.getTrafficEventsCategory().toObject());
-                        if (eg.getTrafficEventsCategory()) {
-                            currentEvent.type = 'traffic';
-
-                            eg.getTrafficEventsCategory().getDangerousSlowDownList().forEach(dsd => {
-                                currentEvent.subType.push('DangerousSlowDown');
-                            });
-
-                            eg.getTrafficEventsCategory().getTrafficConditionList().forEach(tc => {
-                                currentEvent.subType.push('TrafficCondition');
-                            });
-
-                            eg.getTrafficEventsCategory().getRoadworksList().forEach(rw => {
-                                currentEvent.subType.push('Roadworks');
-                            });
-
-                            eg.getTrafficEventsCategory().getRoadWeatherConditionList().forEach(rwc => {
-                                currentEvent.subType.push('RoadWeatherCondition');
-                            });
-
-                            eg.getTrafficEventsCategory().getHazardList().forEach(h => {
-                                currentEvent.subType.push('Hazard');
-                                // console.log('hazard', h.getEnvelope().toObject());
-                                if (h.getEnvelope()) {
-                                    // h.getEnvelope().getExtensionList().forEach(ex => {
-                                    //     currentEvent.value = this.fromBase64String(ex.toObject().value);
-                                    // });
-                                }
-                            });
-
+    
+    
+                        this.payload += this.encodeEventPayload(currentEvent);
+    
+                        if (++this.currentChunkCount > this.chunkSize) {
+                            this.chunks.push(this.payload);
+                            this.payload = '';
+                            this.currentChunkCount = 0;
                         }
-
-                        if (eg.getWeatherCategory()) {
-                            currentEvent.type = 'weather';
-
-                            if (eg.getWeatherCategory().getEnvelope()) {
-                                console.log('env', eg.getWeatherCategory().getEnvelope().toObject());
-                            }
-
-                            eg.getWeatherCategory().getPrecipitationList().forEach(p => {
-                                currentEvent.subType.push('precipitation');
-                                if (p.getEnvelope()) {
-                                    // p.getEnvelope().getExtensionList().forEach(ex => {
-                                    //     currentEvent.value = this.fromBase64String(ex.toObject().value);
-                                    // });
-                                }
-                            });
-                        }
-
-                        if (!currentEvent.type) {
-                            currentEvent.type = 'unknown';
-                            console.log('what?', eg.toObject());
-                        }
-
                     });
-
-
-                    this.payload += this.encodeEventPayload(currentEvent);
-
-                    if (++this.currentChunkCount > this.chunkSize) {
-                        this.chunks.push(this.payload);
-                        this.payload = '';
-                        this.currentChunkCount = 0;
-                    }
-                });
-            }
-            catch (e) {
-                console.error('could not parse: ', filename);
-            }
-            finally {
-                if (++this.preparedFiles >= this.totalFiles) {
-                    // last file has been processed
-                    if (this.currentChunkCount > 0) {
-                        this.chunks.push(this.payload);
-                    }
-                    console.log('total chunks:', this.chunks.length);
-                    this.indexToElasticsearch(this.chunks);
                 }
-            }
-
+                catch (e) {
+                    console.error('could not parse: ', filename);
+                }
+                finally {
+                    if (++this.preparedFiles >= this.totalFiles) {
+                        // last file has been processed
+                        if (this.currentChunkCount > 0 && this.payload) {
+                            this.chunks.push(this.payload);
+                        }
+                        console.log('[DEBUG] total chunks:', this.chunks.length);
+                        this.indexToElasticsearch(this.chunks).then(done => resolve()).catch(e => reject(e));
+                    }
+                }
+    
+            });
         });
     }
 
@@ -243,8 +254,8 @@ export class MessageParser {
     }
 
     private indexToElasticsearch(chunkPayloads: string[]) {
-        console.log('loading chunks to ES. count:', chunkPayloads.length);
-        chunkPayloads.forEach(cp => {
+        console.log('[DEBUG] loading chunks to ES. count:', chunkPayloads.length, this.directory);
+        return Promise.all(chunkPayloads.map(cp => {
             let options = {
                 method: 'POST',
                 uri: this.esUrl + '/_bulk',
@@ -254,14 +265,12 @@ export class MessageParser {
                 }
             };
 
-            rp(options).then(res => {
+            return rp(options).then(res => {
                 console.log('data ingested!');
-                this.finished = true;
-                this.finishedCallback();
             }, err => {
                 console.error('could not ingest data');
             });
-        });
+        }));
     }
 }
 
