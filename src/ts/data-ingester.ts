@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import asyncPool from "tiny-async-pool";
 
 import { MessageParser } from './message-parser';
 

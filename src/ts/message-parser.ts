@@ -1,6 +1,5 @@
 import { goog } from 'google-protobuf';
 import * as sensorisMessagesImport from '../js/sensoris/protobuf/messages/data_pb';
-import { default as rp } from 'request-promise-native';
 import { default as request } from 'request';
 import * as fs from 'fs';
 

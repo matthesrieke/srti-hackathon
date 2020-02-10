@@ -11,10 +11,8 @@
   "devDependencies": {
     "@types/minimist": "^1.2.0",
     "@types/node": "^13.1.4",
-    "@types/p-limit": "^2.2.0",
     "@types/promise": "^7.1.30",
     "@types/request-promise-native": "^1.0.17",
-    "@types/tiny-async-pool": "^1.0.0",
     "tslint": "^5.20.1",
     "typescript": "^3.7.4"
   },
@@ -23,11 +21,9 @@
     "csvtojson": "^2.0.10",
     "google-protobuf": "^3.11.3",
     "minimist": "^1.2.0",
-    "p-limit": "^2.2.2",
     "promise": "^8.0.3",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.0",
-    "request-promise-native": "^1.0.8",
-    "tiny-async-pool": "^1.1.0"
+    "request-promise-native": "^1.0.8"
   }
 }
