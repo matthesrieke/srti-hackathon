@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { MessageParser } from './message-parser';
+import { parse } from 'querystring';
 
 export class DataIngester {
 
@@ -32,7 +33,11 @@ export class DataIngester {
             this.walkAsync(dd).then((dataFiles: any[]) => {
                 console.log('preaparing data file parsing. count', dataFiles.length);
                 const parser = new MessageParser(this.esUrl, this.created, dataFiles, dd);
-                parser.ingestDataFiles().then(done => this.processNextDataDirectory());
+                parser.ingestDataFiles().then(done => {
+                    console.log('yeah, ready!!!!!!!!!!!!!!!!!!!!!!');
+                    parser.indexToElasticsearch();
+                    this.processNextDataDirectory();
+                });
             }).catch(err => {
                 console.warn('could not read leaf directory', err);
                 this.processNextDataDirectory();

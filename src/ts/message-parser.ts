@@ -2,6 +2,7 @@ import { goog } from 'google-protobuf';
 import * as sensorisMessagesImport from '../js/sensoris/protobuf/messages/data_pb';
 import { default as request } from 'request';
 import * as fs from 'fs';
+import requestPromise = require('request-promise-native');
 
 const sensorisMessages = sensorisMessagesImport as any;
 
@@ -51,12 +52,14 @@ export class MessageParser {
             Promise.all(this.dataFiles.map(df => {
                 return this.ingestSingleFile(df);
             })).then(ready => {
-                this.indexToElasticsearch().then(done => {
-                    resolve();
-                });
+                console.log('yay, ready. payload length', this.payload.length);
+                if (this.payload.length > 0) {
+                    this.chunks.push(this.payload);
+                }
+                resolve();
             });
         });
-        
+
     }
 
     private ingestSingleFile(filename: string) {
@@ -66,39 +69,39 @@ export class MessageParser {
                     if (err) {
                         throw err;
                     }
-    
+
                     var arrByte = Uint8Array.from(data);
                     var candidate = arrByte.slice(2);
                     var msg = sensorisMessages.DataMessages.deserializeBinary(candidate);
-    
+
                     var list = msg.getDataMessageList();
-    
+
                     list.forEach(dm => {
                         var currentEvent = new SrtiEvent();
                         currentEvent.subType = [];
                         currentEvent.created = this.created;
-    
-    
+
+
                         // outputIfDefined(dm.toObject(), meaningfulPropertiesDataMessage);
-    
+
                         dm.getEventGroupList().forEach(eg => {
                             // outputIfDefined(eg.toObject(), meaningfulPropertiesEventGroup);
-    
+
                             const coordsList = [];
                             let startTime = 0;
                             let endTime = 0;
-    
+
                             if (eg.getLocalizationCategory().getVehicleOdometryList() && eg.getLocalizationCategory().getVehicleOdometryList().length > 0) {
                                 console.log('odo', eg.getLocalizationCategory().getVehicleOdometryList());
                             }
-    
+
                             eg.getLocalizationCategory().getVehiclePositionAndOrientationList().forEach(vpao => {
                                 // console.log('pos', vpao.getOrientationAndAccuracy().toObject());
                                 // outputIfDefined(vpao.toObject(), meaningfulPropertiesVehiclePositionAndOrientation);
                                 if (vpao.getEnvelope()) {
                                     // outputIfDefined(vpao.getEnvelope().toObject(), meaningfulPropertiesVehiclePositionAndOrientationEnvelope);
                                     var unixTime = vpao.getEnvelope().getTimestamp().getPosixTime().toObject().value;
-    
+
                                     if (startTime === 0) {
                                         // first time value, use it for both
                                         startTime = unixTime;
@@ -110,55 +113,55 @@ export class MessageParser {
                                     }
                                     this.deltaTimes++;
                                 } else {
-    
+
                                 }
-    
+
                                 // console.log('pos', vpao.getPositionAndAccuracy().toObject());
                                 // outputIfDefined(vpao.getPositionAndAccuracy().toObject(), meaningfulPropertiesPositionAndAccuracy);
-    
+
                                 // coords loat lon --> x/10^8
                                 var coords = vpao.getPositionAndAccuracy().getGeographicWgs84();
                                 var lon = coords.getLongitude() / (10 ** 8);
                                 var lat = coords.getLatitude() / (10 ** 8);
                                 coordsList.push([lon, lat]);
-    
-    
+
+
                                 // console.log('currentEvent: ' + currentEvent);                            
                             });
-    
+
                             currentEvent.geometry = {
                                 type: 'LineString',
                                 coordinates: coordsList
                             };
-    
+
                             currentEvent.location = {
                                 lat: coordsList[0][1],
                                 lon: coordsList[0][0],
                             };
-    
+
                             currentEvent.timeStart = new Date(startTime);
                             currentEvent.timeEnd = new Date(endTime);
-    
+
                             // console.log(eg.getTrafficEventsCategory().toObject());
                             if (eg.getTrafficEventsCategory()) {
                                 currentEvent.type = 'traffic';
-    
+
                                 eg.getTrafficEventsCategory().getDangerousSlowDownList().forEach(dsd => {
                                     currentEvent.subType.push('DangerousSlowDown');
                                 });
-    
+
                                 eg.getTrafficEventsCategory().getTrafficConditionList().forEach(tc => {
                                     currentEvent.subType.push('TrafficCondition');
                                 });
-    
+
                                 eg.getTrafficEventsCategory().getRoadworksList().forEach(rw => {
                                     currentEvent.subType.push('Roadworks');
                                 });
-    
+
                                 eg.getTrafficEventsCategory().getRoadWeatherConditionList().forEach(rwc => {
                                     currentEvent.subType.push('RoadWeatherCondition');
                                 });
-    
+
                                 eg.getTrafficEventsCategory().getHazardList().forEach(h => {
                                     currentEvent.subType.push('Hazard');
                                     // console.log('hazard', h.getEnvelope().toObject());
@@ -168,16 +171,16 @@ export class MessageParser {
                                         });
                                     }
                                 });
-    
+
                             }
-    
+
                             if (eg.getWeatherCategory()) {
                                 currentEvent.type = 'weather';
-    
+
                                 if (eg.getWeatherCategory().getEnvelope()) {
                                     console.log('env', eg.getWeatherCategory().getEnvelope().toObject());
                                 }
-    
+
                                 eg.getWeatherCategory().getPrecipitationList().forEach(p => {
                                     currentEvent.subType.push('precipitation');
                                     if (p.getEnvelope()) {
@@ -187,16 +190,16 @@ export class MessageParser {
                                     }
                                 });
                             }
-    
+
                             if (!currentEvent.type) {
                                 currentEvent.type = 'unknown';
                                 console.log('what?', eg.toObject());
                             }
-    
+
                         });
-    
+
                         this.payload += this.encodeEventPayload(currentEvent);
-    
+
                         if (++this.currentChunkCount > this.chunkSize) {
                             this.chunks.push(this.payload);
                             this.payload = '';
@@ -209,7 +212,7 @@ export class MessageParser {
                 catch (e) {
                     console.error('could not parse: ', filename);
                     resolve();
-                }    
+                }
             });
         });
     }
@@ -250,9 +253,9 @@ export class MessageParser {
         return result;
     }
 
-    private indexToElasticsearch() {
+    public indexToElasticsearch() {
         console.log('[DEBUG] loading chunks to ES. count:', this.chunks.length, this.directory);
-        return Promise.all(this.chunks.map(cp => {
+        this.chunks.forEach(cp => {
             let options = {
                 method: 'POST',
                 uri: this.esUrl + '/_bulk',
@@ -262,19 +265,13 @@ export class MessageParser {
                 }
             };
 
-            return new Promise((resolve, reject) => {
-                request(options, (error, response, body) => {
-                    if (error) {
-                        console.error('could not ingest data');
-                        reject(error);
-                    } else {
-                        console.log('data ingested!');
-                        resolve();
-                    }
-                });
+            requestPromise(options).then(response => {
+                console.log('data ingested!');
+            }).catch(err => {
+                console.warn('error with ES ingestion', err);
             });
-            
-        }));
+
+        });
     }
 }
 
