@@ -1,36 +1,44 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { default as pLimit } from 'p-limit';
+import asyncPool from "tiny-async-pool";
 
 import { MessageParser } from './message-parser';
 
 export class DataIngester {
 
     created: Date;
+    dataDirectories: any[];
 
     constructor(private baseDir: string, private esUrl: string) {
     }
 
     public startIngestion() {
-        const limit = pLimit(1);
+
         this.created = new Date();
         this.walkAsync(this.baseDir, true).then((dataDirs: any[]) => {
             console.log('leaf data dir count', dataDirs.length);
-            dataDirs.map(dd => {
+            this.dataDirectories = dataDirs;
 
-                this.walkAsync(dd).then((dataFiles: any[]) => {
-                    console.log('preaparing data file parsing. count', dataFiles.length);
-                    const parser = new MessageParser(this.esUrl, this.created, dataFiles, dd);
-                    parser.ingestDataFiles();
-                }).catch(err => {
-                    console.warn('could not read leaf directory', err);
-                });
-
-            });
+            this.processNextDataDirectory();
 
         }).catch(err => {
             console.warn('could not read base directory', err);
         });
+    }
+
+    processNextDataDirectory() {
+        console.log('Processing next data directory. remaining', this.dataDirectories.length);
+        if (this.dataDirectories.length > 0) {
+            const dd = this.dataDirectories.pop();
+            this.walkAsync(dd).then((dataFiles: any[]) => {
+                console.log('preaparing data file parsing. count', dataFiles.length);
+                const parser = new MessageParser(this.esUrl, this.created, dataFiles, dd);
+                parser.ingestDataFiles().then(done => this.processNextDataDirectory());
+            }).catch(err => {
+                console.warn('could not read leaf directory', err);
+                this.processNextDataDirectory();
+            });
+        }
     }
 
 

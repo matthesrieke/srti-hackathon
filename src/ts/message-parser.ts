@@ -1,8 +1,8 @@
 import { goog } from 'google-protobuf';
 import * as sensorisMessagesImport from '../js/sensoris/protobuf/messages/data_pb';
 import { default as rp } from 'request-promise-native';
+import { default as request } from 'request';
 import * as fs from 'fs';
-import { Limit } from 'p-limit';
 
 const sensorisMessages = sensorisMessagesImport as any;
 
@@ -48,9 +48,16 @@ export class MessageParser {
         this.totalFiles = this.dataFiles.length;
         console.log('[DEBUG] ingesting files. count', this.totalFiles);
 
-        return Promise.all(this.dataFiles.map(df => {
-            return this.ingestSingleFile(df);
-        }));
+        return new Promise((resolve, reject) => {
+            Promise.all(this.dataFiles.map(df => {
+                return this.ingestSingleFile(df);
+            })).then(ready => {
+                this.indexToElasticsearch().then(done => {
+                    resolve();
+                });
+            });
+        });
+        
     }
 
     private ingestSingleFile(filename: string) {
@@ -189,7 +196,6 @@ export class MessageParser {
     
                         });
     
-    
                         this.payload += this.encodeEventPayload(currentEvent);
     
                         if (++this.currentChunkCount > this.chunkSize) {
@@ -197,22 +203,14 @@ export class MessageParser {
                             this.payload = '';
                             this.currentChunkCount = 0;
                         }
+
+                        resolve();
                     });
                 }
                 catch (e) {
                     console.error('could not parse: ', filename);
-                }
-                finally {
-                    if (++this.preparedFiles >= this.totalFiles) {
-                        // last file has been processed
-                        if (this.currentChunkCount > 0 && this.payload) {
-                            this.chunks.push(this.payload);
-                        }
-                        console.log('[DEBUG] total chunks:', this.chunks.length);
-                        this.indexToElasticsearch(this.chunks).then(done => resolve()).catch(e => reject(e));
-                    }
-                }
-    
+                    resolve();
+                }    
             });
         });
     }
@@ -253,9 +251,9 @@ export class MessageParser {
         return result;
     }
 
-    private indexToElasticsearch(chunkPayloads: string[]) {
-        console.log('[DEBUG] loading chunks to ES. count:', chunkPayloads.length, this.directory);
-        return Promise.all(chunkPayloads.map(cp => {
+    private indexToElasticsearch() {
+        console.log('[DEBUG] loading chunks to ES. count:', this.chunks.length, this.directory);
+        return Promise.all(this.chunks.map(cp => {
             let options = {
                 method: 'POST',
                 uri: this.esUrl + '/_bulk',
@@ -265,11 +263,18 @@ export class MessageParser {
                 }
             };
 
-            return rp(options).then(res => {
-                console.log('data ingested!');
-            }, err => {
-                console.error('could not ingest data');
+            return new Promise((resolve, reject) => {
+                request(options, (error, response, body) => {
+                    if (error) {
+                        console.error('could not ingest data');
+                        reject(error);
+                    } else {
+                        console.log('data ingested!');
+                        resolve();
+                    }
+                });
             });
+            
         }));
     }
 }
