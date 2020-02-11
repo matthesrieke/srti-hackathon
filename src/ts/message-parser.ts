@@ -19,6 +19,7 @@ export class SrtiEvent {
     numericalValue: number;
     categoricalValue: string;
     valueUom: string;
+    protoPayload: string;
 
 }
 
@@ -71,6 +72,7 @@ export class MessageParser {
                     }
 
                     var arrByte = Uint8Array.from(data);
+                    var b64 = this.toBase64String(arrByte);
                     var candidate = arrByte.slice(2);
                     var msg = sensorisMessages.DataMessages.deserializeBinary(candidate);
 
@@ -78,6 +80,7 @@ export class MessageParser {
 
                     list.forEach(dm => {
                         var currentEvent = new SrtiEvent();
+                        currentEvent.protoPayload = b64;
                         currentEvent.subType = [];
                         currentEvent.created = this.created;
 
@@ -167,7 +170,7 @@ export class MessageParser {
                                     // console.log('hazard', h.getEnvelope().toObject());
                                     if (h.getEnvelope()) {
                                         h.getEnvelope().getExtensionList().forEach(ex => {
-                                            currentEvent.categoricalValue = this.fromBase64String(ex.toObject().value);
+                                            currentEvent.categoricalValue = this.parseBase64String(ex.toObject().value);
                                         });
                                     }
                                 });
@@ -185,7 +188,7 @@ export class MessageParser {
                                     currentEvent.subType.push('precipitation');
                                     if (p.getEnvelope()) {
                                         p.getEnvelope().getExtensionList().forEach(ex => {
-                                            currentEvent.categoricalValue = this.fromBase64String(ex.toObject().value);
+                                            currentEvent.categoricalValue = this.parseBase64String(ex.toObject().value);
                                         });
                                     }
                                 });
@@ -217,10 +220,20 @@ export class MessageParser {
         });
     }
 
-    private fromBase64String(value: any): any {
+    private parseBase64String(value: any): any {
         let result = Buffer.from(value.trim(), 'base64').toString('utf-8').trim();
         result = result.replace(/[^A-Za-z 0-9 \.,\?""!@#\$%\^&\*\(\)-_=\+;:<>\/\\\|\}\{\[\]`~]*/g, '');
         return result;
+    }
+
+    private toBase64String(bytes: any): string {
+        let result = Buffer.from(bytes).toString('base64');
+        return result;
+    }
+
+    private fromBase64String(data: string): Uint8Array {
+        let result = new Buffer(data, 'base64');
+        return result;;
     }
 
     private addToArray(prop: any, arr: any[]) {

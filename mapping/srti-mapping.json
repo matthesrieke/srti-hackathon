@@ -19,7 +19,8 @@
                 "subType" : { "type" : "keyword" },
                 "numericalValue" : { "type" : "double" },
                 "categoricalValue" : { "type" : "keyword" },
-                "valueUom" : { "type" : "keyword" }
+                "valueUom" : { "type" : "keyword" },
+                "protoPayload": { "type": "text", "index": false }
             }
         }
     }
