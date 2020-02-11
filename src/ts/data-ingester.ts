@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { MessageParser } from './message-parser';
-import { parse } from 'querystring';
 
 export class DataIngester {
 
@@ -20,21 +19,19 @@ export class DataIngester {
             this.dataDirectories = dataDirs;
 
             this.processNextDataDirectory();
-
         }).catch(err => {
             console.warn('could not read base directory', err);
         });
     }
 
-    processNextDataDirectory() {
+    private processNextDataDirectory() {
         console.log('Processing next data directory. remaining', this.dataDirectories.length);
         if (this.dataDirectories.length > 0) {
             const dd = this.dataDirectories.pop();
             this.walkAsync(dd).then((dataFiles: any[]) => {
-                console.log('preaparing data file parsing. count', dataFiles.length);
+                console.log('preparing data file parsing. count', dataFiles.length);
                 const parser = new MessageParser(this.esUrl, this.created, dataFiles, dd);
                 parser.ingestDataFiles().then(done => {
-                    console.log('yeah, ready!!!!!!!!!!!!!!!!!!!!!!');
                     parser.indexToElasticsearch();
                     this.processNextDataDirectory();
                 });
@@ -43,24 +40,6 @@ export class DataIngester {
                 this.processNextDataDirectory();
             });
         }
-    }
-
-
-    private walk(dir: string) {
-        var results = [];
-        var list = fs.readdirSync(dir);
-        list.forEach(file => {
-            file = dir + '/' + file;
-            var stat = fs.statSync(file);
-            if (stat && stat.isDirectory()) {
-                /* Recurse into a subdirectory */
-                results = results.concat(this.walk(file));
-            } else {
-                /* Is a file */
-                results.push(file);
-            }
-        });
-        return results;
     }
 
     private walkAsync(dir, onlyLeafDirs?: boolean) {
