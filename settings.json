@@ -1,5 +1,5 @@
 {
-    "baseDir": "./data/2019-11-19",
-    "baseDir_": "./data/exfat_excerpt",
+    "baseDir_": "./data/2019-11-19",
+    "baseDir": "./data/exfat_excerpt",
     "esUrl": "http://localhost:9200"
 }
